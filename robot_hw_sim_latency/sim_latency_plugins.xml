@@ -1,0 +1,10 @@
+<library path="lib/librobot_hw_sim_latency">
+
+  <class
+    name="robot_hw_sim_latency/DefaultSimLatencyPlugin"
+    type="robot_hw_sim_latency::DefaultSimLatencyPlugin"
+    base_class_type="robot_hw_sim_latency::SimLatencyPlugin">
+    <description>
+    </description>
+  </class>
+</library>

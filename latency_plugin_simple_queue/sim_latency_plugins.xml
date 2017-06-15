@@ -1,0 +1,10 @@
+<library path="lib/liblatency_plugin_simple_queue">
+
+  <class
+    name="latency_plugin_simple_queue/SimpleQueueLatencyPlugin"
+    type="latency_plugin_simple_queue::SimpleQueueLatencyPlugin"
+    base_class_type="robot_hw_sim_latency::SimLatencyPlugin">
+    <description>
+    </description>
+  </class>
+</library>

@@ -1,0 +1,11 @@
+<library path="lib/librobot_hw_sim_latency">
+
+  <class
+    name="robot_hw_sim_latency/RobotHWSimLatency"
+    type="robot_hw_sim_latency::RobotHWSimLatency"
+    base_class_type="gazebo_ros_control::RobotHWSim">
+    <description>
+      A robot simulation interface which constructs joint handles from an SDF/URDF, and uses a plugin to implement latency.
+    </description>
+  </class>
+</library>
