@@ -26,7 +26,7 @@ I assume a catkin workspace is already set up, and gazebo_ros_pkgs is [installed
 
 # Usage
 
-1. To configure gazebo_ros_control to load robot_hw_sim_latency plugin instead of the default modify your robot's urdf:
+1. To configure gazebo_ros_control to load robot_hw_sim_latency plugin instead of the default, modify your robot's urdf:
 
   Example: If using UR robots, change https://github.com/ros-industrial/universal_robot/blob/kinetic-devel/ur_description/urdf/common.gazebo.xacro
 
