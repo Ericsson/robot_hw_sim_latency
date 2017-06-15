@@ -1,3 +1,7 @@
+# Modification
+
+In order to allow modifying the time and period in a latency plugin changed the readSim(ros::Time& time, ros::Duration& period) function to use references.
+
 # Gazebo ros_control Interfaces
 
 This is a ROS package for integrating the `ros_control` controller architecture
@@ -10,4 +14,4 @@ controller manager and connects it to a Gazebo model.
 
 ## Future Direction
 
- - Implement transmissions
+ - Implement transmissin
