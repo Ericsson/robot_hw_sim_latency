@@ -48,3 +48,40 @@ I assume a catkin workspace is already set up, and gazebo_ros_pkgs is [installed
    <rosparam param="/robot_hw_sim_latency/latency_plugin">latency_plugin_simple_queue/SimpleQueueLatencyPlugin</rosparam>
  ```
 
+
+# Detailed working mechanism of the system
+
+![Working mechanism of the system](https://github.com/szgezu/robot_hw_sim_latency/blob/master/system.png "Working mechanism of the system")
+
+The working mechanism of the system is the following:
+1. The gazebo_ros_control update function fires
+2. it calls the readSim function; the call is executed in the RobotHWSimLatency plugin which implements the readSim function
+3. the states are read from the gazebo internals
+4. the delayStates function is called in the Simple queue latency plugin that saves the state messages in a buffer
+5. the previously stored and now delayed states are returned from the Simple queue latency plugin to the RobotHWSimLatency plugin
+6. readSim writes the joint_states to the JointStateInterface of the Harware Resource Interface Layer
+7. gazebo_ros_control calls the update function of the controler_manager
+8. the joint_trajectory_controller in the controller manager executes the calculation of the PID-controllers
+9. the joint_trajectory_controller writes the calculated velocity commands to the VelocityInterface of the Hardware Resource Interface Layer
+10. the gazebo_ros_control calls the writeSim function which is implemented in the RobotHWSimLatency plugin
+11. the writeSim function reads the joint commands from the VelocityInterface of the Hardware Resource Interface Layer
+12. the writeSim function calls the delayCommands function of the Simple queue latency plugin
+13. the previously stored and now delayed commands are returned from the Simple queue latency plugin to the RobotHWSimLatency plugin
+14. the writeSim function writes the joint commands to the gazebo internals
+15. Gazebo calculate the internal states of the simulation loop
+16. a new simulation loop is started by calling the update function of the gazebo_ros_control plugin
+
+
+# Expected output
+
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory2.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory3.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory4.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory5.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory6.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory7.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory8.png "Same trajectories with various latency settings")
+![Same trajectories with various latency settings](https://github.com/szgezu/robot_hw_sim_latency/blob/master/trajectory9.png "Same trajectories with various latency settings")
+
+
+
