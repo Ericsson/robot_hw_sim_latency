@@ -48,6 +48,13 @@ I assume a catkin workspace is already set up, and gazebo_ros_pkgs is [installed
    <rosparam param="/robot_hw_sim_latency/latency_plugin">latency_plugin_simple_queue/SimpleQueueLatencyPlugin</rosparam>
  ```
 
+3. To configure the length of queue in latency_plugin_simple_queue, set the `/latency_plugin_simple_queue/queue_length` parameter on the Parameter Server.
+
+  Example using roslaunch:
+
+ ```xml
+   <rosparam param="/latency_plugin_simple_queue/queue_length">10</rosparam>
+ ```
 
 # Detailed working mechanism of the system
 

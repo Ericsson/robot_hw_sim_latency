@@ -75,5 +75,6 @@ private:
   std::deque<RobotData> queue_command;
 
   int n_dof;
+  int queue_length;
 };
 }

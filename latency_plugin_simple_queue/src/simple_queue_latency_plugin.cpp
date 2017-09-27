@@ -51,8 +51,10 @@ namespace latency_plugin_simple_queue
 bool SimpleQueueLatencyPlugin::initPlugin(const std::string& robot_namespace, ros::NodeHandle model_nh, int n_dof_)
 {
 	n_dof=n_dof_;
-	queue_state =  std::deque<RobotData>(10, RobotData(n_dof_));
-	queue_command =  std::deque<RobotData>(10, RobotData(n_dof_));
+	queue_length = model_nh.param<int>("/latency_plugin_simple_queue/queue_length", 1);
+	queue_state =  std::deque<RobotData>(queue_length, RobotData(n_dof_));
+	queue_command =  std::deque<RobotData>(queue_length, RobotData(n_dof_));
+	ROS_INFO_STREAM_ONCE_NAMED("latency_plugin_simple_queue", "latency_plugin_simple_queue loaded Queue length: "<< queue_length);
 }
 
 std::tuple<ros::Time, ros::Duration, std::vector<double>, std::vector<double>, std::vector<double>>
@@ -63,7 +65,7 @@ SimpleQueueLatencyPlugin::delayStates(ros::Time time, ros::Duration period, std:
 	
 	auto ret = queue_state.front();
 	queue_state.pop_front();
-	ROS_INFO_STREAM_THROTTLE_NAMED(1,"latency_plugin_simple_queue", "Current read latency: "<< time-ret.time);
+	ROS_INFO_STREAM_ONCE_NAMED("latency_plugin_simple_queue", "Current read latency: "<< time-ret.time);
 	return std::make_tuple(time, period, ret.position, ret.velocity, ret.effort);
 }
 
@@ -77,7 +79,7 @@ SimpleQueueLatencyPlugin::delayCommands(ros::Time time, ros::Duration period, st
 	queue_command.emplace_back(n_dof, time, period, position, velocity, effort, position_command, velocity_command, effort_command);
 	auto ret = queue_command.front();
 	queue_command.pop_front();
-	ROS_INFO_STREAM_THROTTLE_NAMED(1,"latency_plugin_simple_queue", "Current write latency: "<< time-ret.time);
+	ROS_INFO_STREAM_ONCE_NAMED("latency_plugin_simple_queue", "Current write latency: "<< time-ret.time);
 	return std::make_tuple(time, period, position, velocity, effort, ret.position_command, ret.velocity_command, ret.effort_command);
 }
 }
