@@ -76,5 +76,6 @@ private:
 
   int n_dof;
   int queue_length;
+  bool no_delay;
 };
 }
