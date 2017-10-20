@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package>
   <name>robot_hw_sim_latency</name>
-  <version>0.1-2.5.11</version>
+  <version>0.0.1</version>
   <description>Custom gazebo_ros_control simulation plugin that can add latency to communication between ros_control and gazebo</description>
 
   <maintainer email="pjoejoejoe@gmail.com">József Pető</maintainer>
