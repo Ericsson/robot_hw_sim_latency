@@ -127,26 +127,27 @@ protected:
   std::vector<double> joint_effort_limits_;
   std::vector<ControlMethod> joint_control_methods_;
   std::vector<control_toolbox::Pid> pid_controllers_;
-  std::vector<double> joint_position_;
-  std::vector<double> joint_velocity_;
-  std::vector<double> joint_effort_;
+  
+  std::vector<double> current_joint_position_;
+  std::vector<double> current_joint_velocity_;
+  std::vector<double> current_joint_effort_;
+  
+  std::vector<double> delayed_joint_position_;
+  std::vector<double> delayed_joint_velocity_;
+  std::vector<double> delayed_joint_effort_;
   
   std::vector<double> hw_joint_position_;
   std::vector<double> hw_joint_velocity_;
   std::vector<double> hw_joint_effort_;
   
-  std::vector<double> temp_joint_position_;
-  std::vector<double> temp_joint_velocity_;
-  std::vector<double> temp_joint_effort_;
-  
-  std::vector<double> joint_effort_command_;
-  std::vector<double> joint_position_command_;
+  std::vector<double> current_joint_effort_command_;
+  std::vector<double> current_joint_position_command_;
   std::vector<double> last_joint_position_command_;
-  std::vector<double> joint_velocity_command_;
+  std::vector<double> current_joint_velocity_command_;
   
-  std::vector<double> temp_joint_position_command_;
-  std::vector<double> temp_joint_velocity_command_;
-  std::vector<double> temp_joint_effort_command_;
+  std::vector<double> delayed_joint_position_command_;
+  std::vector<double> delayed_joint_velocity_command_;
+  std::vector<double> delayed_joint_effort_command_;
 
   std::vector<gazebo::physics::JointPtr> sim_joints_;
 

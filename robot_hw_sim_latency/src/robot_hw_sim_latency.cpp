@@ -79,21 +79,26 @@ bool RobotHWSimLatency::initSim(
   joint_effort_limits_.resize(n_dof_);
   joint_control_methods_.resize(n_dof_);
   pid_controllers_.resize(n_dof_);
-  joint_position_.resize(n_dof_);
-  joint_velocity_.resize(n_dof_);
-  joint_effort_.resize(n_dof_);
+  
+  current_joint_position_.resize(n_dof_);
+  current_joint_velocity_.resize(n_dof_);
+  current_joint_effort_.resize(n_dof_);
+  
   hw_joint_position_.resize(n_dof_);
   hw_joint_velocity_.resize(n_dof_);
   hw_joint_effort_.resize(n_dof_);
-  joint_effort_command_.resize(n_dof_);
-  joint_position_command_.resize(n_dof_);
-  joint_velocity_command_.resize(n_dof_);
-  temp_joint_position_.resize(n_dof_);
-  temp_joint_velocity_.resize(n_dof_);
-  temp_joint_effort_.resize(n_dof_);
-  temp_joint_position_command_.resize(n_dof_);
-  temp_joint_velocity_command_.resize(n_dof_);
-  temp_joint_effort_command_.resize(n_dof_);
+  
+  current_joint_effort_command_.resize(n_dof_);
+  current_joint_position_command_.resize(n_dof_);
+  current_joint_velocity_command_.resize(n_dof_);
+  
+  delayed_joint_position_.resize(n_dof_);
+  delayed_joint_velocity_.resize(n_dof_);
+  delayed_joint_effort_.resize(n_dof_);
+  
+  delayed_joint_position_command_.resize(n_dof_);
+  delayed_joint_velocity_command_.resize(n_dof_);
+  delayed_joint_effort_command_.resize(n_dof_);
   
   std::string latency_plugin_str;
   sim_latency_plugin_loader_.reset(new pluginlib::ClassLoader<robot_hw_sim_latency::SimLatencyPlugin>("robot_hw_sim_latency", "robot_hw_sim_latency::SimLatencyPlugin"));
@@ -158,12 +163,12 @@ bool RobotHWSimLatency::initSim(
 
     // Add data from transmission
     joint_names_[j] = transmissions[j].joints_[0].name_;
-    joint_position_[j] = 1.0;
-    joint_velocity_[j] = 0.0;
-    joint_effort_[j] = 1.0;  // N/m for continuous joints
-    joint_effort_command_[j] = 0.0;
-    joint_position_command_[j] = 0.0;
-    joint_velocity_command_[j] = 0.0;
+    current_joint_position_[j] = 1.0;
+    current_joint_velocity_[j] = 0.0;
+    current_joint_effort_[j] = 1.0;  // N/m for continuous joints
+    current_joint_effort_command_[j] = 0.0;
+    current_joint_position_command_[j] = 0.0;
+    current_joint_velocity_command_[j] = 0.0;
 
     const std::string& hardware_interface = joint_interfaces.front();
 
@@ -185,7 +190,7 @@ bool RobotHWSimLatency::initSim(
       // Create effort joint interface
       joint_control_methods_[j] = EFFORT;
       joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &joint_effort_command_[j]);
+                                                     &current_joint_effort_command_[j]);
       ej_interface_.registerHandle(joint_handle);
     }
     else if(hardware_interface == "PositionJointInterface" || hardware_interface == "hardware_interface/PositionJointInterface")
@@ -193,7 +198,7 @@ bool RobotHWSimLatency::initSim(
       // Create position joint interface
       joint_control_methods_[j] = POSITION;
       joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &joint_position_command_[j]);
+                                                     &current_joint_position_command_[j]);
       pj_interface_.registerHandle(joint_handle);
     }
     else if(hardware_interface == "VelocityJointInterface" || hardware_interface == "hardware_interface/VelocityJointInterface")
@@ -201,7 +206,7 @@ bool RobotHWSimLatency::initSim(
       // Create velocity joint interface
       joint_control_methods_[j] = VELOCITY;
       joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &joint_velocity_command_[j]);
+                                                     &current_joint_velocity_command_[j]);
       vj_interface_.registerHandle(joint_handle);
     }
     else
@@ -282,19 +287,19 @@ void RobotHWSimLatency::readSim(ros::Time& time, ros::Duration& period)
   for (unsigned int j = 0; j < n_dof_; j++) {
     // Gazebo has an interesting API...
     if (joint_types_[j] == urdf::Joint::PRISMATIC) {
-      temp_joint_position_[j] = sim_joints_[j]->GetAngle(0).Radian();
+      current_joint_position_[j] = sim_joints_[j]->GetAngle(0).Radian();
     }
     else
     {
-      temp_joint_position_[j] +=
-          angles::shortest_angular_distance(joint_position_[j], sim_joints_[j]->GetAngle(0).Radian());
+      current_joint_position_[j] +=
+          angles::shortest_angular_distance(current_joint_position_[j], sim_joints_[j]->GetAngle(0).Radian());
     }
-    temp_joint_velocity_[j] = sim_joints_[j]->GetVelocity(0);
-    temp_joint_effort_[j] = sim_joints_[j]->GetForce((unsigned int)(0));
+    current_joint_velocity_[j] = sim_joints_[j]->GetVelocity(0);
+    current_joint_effort_[j] = sim_joints_[j]->GetForce((unsigned int)(0));
   }
 
-  std::tie(time, period, joint_position_, joint_velocity_, joint_effort_) =
-      latency_plugin_->delayStates(time, period, temp_joint_position_, temp_joint_velocity_, temp_joint_effort_);
+  std::tie(time, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_) =
+      latency_plugin_->delayStates(time, period, current_joint_position_, current_joint_velocity_, current_joint_effort_);
       
   //std::copy doesn't change the address of the contained data (that is needed by the hw interface), like the copy assignment on previous line
   copyToHWInterface();
@@ -316,8 +321,8 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
   //    ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command "<<joint_names_[i]<<":"<<temp_joint_position_[i] << ":" << joint_position_[i]);
   //}
   
-  std::tie(time, period, temp_joint_position_, temp_joint_velocity_, temp_joint_effort_,temp_joint_position_command_, temp_joint_velocity_command_, temp_joint_effort_command_) =
-      latency_plugin_->delayCommands(time_, period_, joint_position_, joint_velocity_, joint_effort_, joint_position_command_, joint_velocity_command_, joint_effort_command_);
+  std::tie(time, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, delayed_joint_position_command_, delayed_joint_velocity_command_, delayed_joint_effort_command_) =
+      latency_plugin_->delayCommands(time_, period_, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, current_joint_position_command_, current_joint_velocity_command_, current_joint_effort_command_);
       
 
   //ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command time: "<<time<< " " << time_);
@@ -327,10 +332,10 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
   {
     if (!last_e_stop_active_)
     {
-      last_joint_position_command_ = temp_joint_position_;
+      last_joint_position_command_ = current_joint_position_;
       last_e_stop_active_ = true;
     }
-    temp_joint_position_command_ = last_joint_position_command_;
+    delayed_joint_position_command_ = last_joint_position_command_;
   }
   else
   {
@@ -350,16 +355,16 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
     {
       case EFFORT:
         {
-          const double effort = e_stop_active_ ? 0 : temp_joint_effort_command_[j];
+          const double effort = e_stop_active_ ? 0 : delayed_joint_effort_command_[j];
           sim_joints_[j]->SetForce(0, effort);
         }
         break;
 
       case POSITION:
 #if GAZEBO_MAJOR_VERSION >= 4
-        sim_joints_[j]->SetPosition(0, temp_joint_position_command_[j]);
+        sim_joints_[j]->SetPosition(0, delayed_joint_position_command_[j]);
 #else
-        sim_joints_[j]->SetAngle(0, temp_joint_position_command_[j]);
+        sim_joints_[j]->SetAngle(0, delayed_joint_position_command_[j]);
 #endif
         break;
 
@@ -369,18 +374,18 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
           switch (joint_types_[j])
           {
             case urdf::Joint::REVOLUTE:
-              angles::shortest_angular_distance_with_limits(temp_joint_position_[j],
-                                                            temp_joint_position_command_[j],
+              angles::shortest_angular_distance_with_limits(current_joint_position_[j],
+                                                            delayed_joint_position_command_[j],
                                                             joint_lower_limits_[j],
                                                             joint_upper_limits_[j],
                                                             error);
               break;
             case urdf::Joint::CONTINUOUS:
-              error = angles::shortest_angular_distance(temp_joint_position_[j],
-                                                        temp_joint_position_command_[j]);
+              error = angles::shortest_angular_distance(current_joint_position_[j],
+                                                        delayed_joint_position_command_[j]);
               break;
             default:
-              error = temp_joint_position_command_[j] - temp_joint_position_[j];
+              error = delayed_joint_position_command_[j] - current_joint_position_[j];
           }
 
           const double effort_limit = joint_effort_limits_[j];
@@ -392,18 +397,18 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
 
       case VELOCITY:
 #if GAZEBO_MAJOR_VERSION > 2
-        sim_joints_[j]->SetParam("vel", 0, e_stop_active_ ? 0 : temp_joint_velocity_command_[j]);
+        sim_joints_[j]->SetParam("vel", 0, e_stop_active_ ? 0 : delayed_joint_velocity_command_[j]);
 #else
-        sim_joints_[j]->SetVelocity(0, e_stop_active_ ? 0 : temp_joint_velocity_command_[j]);
+        sim_joints_[j]->SetVelocity(0, e_stop_active_ ? 0 : delayed_joint_velocity_command_[j]);
 #endif
         break;
 
       case VELOCITY_PID:
         double error;
         if (e_stop_active_)
-          error = -temp_joint_velocity_[j];
+          error = -current_joint_velocity_[j];
         else
-          error = temp_joint_velocity_command_[j] - temp_joint_velocity_[j];
+          error = delayed_joint_velocity_command_[j] - current_joint_velocity_[j];
         const double effort_limit = joint_effort_limits_[j];
         const double effort = clamp(pid_controllers_[j].computeCommand(error, period),
                                     -effort_limit, effort_limit);
@@ -414,9 +419,9 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
 }
 
 void RobotHWSimLatency::copyToHWInterface(){
-  std::copy(joint_position_.begin(),joint_position_.end(),hw_joint_position_.begin());
-  std::copy(joint_velocity_.begin(),joint_velocity_.end(),hw_joint_velocity_.begin());
-  std::copy(joint_effort_.begin(),joint_effort_.end(),hw_joint_effort_.begin());
+  std::copy(delayed_joint_position_.begin(),delayed_joint_position_.end(),hw_joint_position_.begin());
+  std::copy(delayed_joint_velocity_.begin(),delayed_joint_velocity_.end(),hw_joint_velocity_.begin());
+  std::copy(delayed_joint_effort_.begin(),delayed_joint_effort_.end(),hw_joint_effort_.begin());
 
   
 }
