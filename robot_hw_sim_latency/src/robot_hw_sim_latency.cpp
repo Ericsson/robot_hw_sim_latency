@@ -281,7 +281,7 @@ bool RobotHWSimLatency::initSim(
   return true;
 }
 
-void RobotHWSimLatency::readSim(ros::Time& time, ros::Duration& period)
+void RobotHWSimLatency::readSim(ros::Time time, ros::Duration period)
 {
 
   for (unsigned int j = 0; j < n_dof_; j++) {
@@ -298,7 +298,7 @@ void RobotHWSimLatency::readSim(ros::Time& time, ros::Duration& period)
     current_joint_effort_[j] = sim_joints_[j]->GetForce((unsigned int)(0));
   }
 
-  std::tie(time, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_) =
+  std::tie(std::ignore, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_) =
       latency_plugin_->delayStates(time, period, current_joint_position_, current_joint_velocity_, current_joint_effort_);
       
   //std::copy doesn't change the address of the contained data (that is needed by the hw interface), like the copy assignment on previous line
@@ -321,10 +321,17 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
   //    ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command "<<joint_names_[i]<<":"<<temp_joint_position_[i] << ":" << joint_position_[i]);
   //}
   
-  std::tie(time, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, delayed_joint_position_command_, delayed_joint_velocity_command_, delayed_joint_effort_command_) =
+
+  
+  std::tie(std::ignore, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, delayed_joint_position_command_, delayed_joint_velocity_command_, delayed_joint_effort_command_) =
       latency_plugin_->delayCommands(time_, period_, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, current_joint_position_command_, current_joint_velocity_command_, current_joint_effort_command_);
       
-
+  ej_sat_interface_.enforceLimits(period);
+  ej_limits_interface_.enforceLimits(period);
+  pj_sat_interface_.enforceLimits(period);
+  pj_limits_interface_.enforceLimits(period);
+  vj_sat_interface_.enforceLimits(period);
+  vj_limits_interface_.enforceLimits(period);
   //ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command time: "<<time<< " " << time_);
   
   // If the E-stop is active, joints controlled by position commands will maintain their positions.
@@ -341,13 +348,6 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
   {
     last_e_stop_active_ = false;
   }
-
-  ej_sat_interface_.enforceLimits(period);
-  ej_limits_interface_.enforceLimits(period);
-  pj_sat_interface_.enforceLimits(period);
-  pj_limits_interface_.enforceLimits(period);
-  vj_sat_interface_.enforceLimits(period);
-  vj_limits_interface_.enforceLimits(period);
 
   for(unsigned int j=0; j < n_dof_; j++)
   {
@@ -413,6 +413,7 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
         const double effort = clamp(pid_controllers_[j].computeCommand(error, period),
                                     -effort_limit, effort_limit);
         sim_joints_[j]->SetForce(0, effort);
+        //ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<< joint_names_[j] << " velerror: "<<error<< " effort: "<<effort);
         break;
     }
   }
