@@ -3,10 +3,6 @@ Custom gazebo_ros_control simulation plugin that can add latency to communicatio
 
 # Description
 
-## gazebo_ros_control
-
-Modified [gazebo_ros_control](https://github.com/ros-simulation/gazebo_ros_pkgs/tree/kinetic-devel/gazebo_ros_control) 
-In order to allow modifying the time and period in a latency plugin, changed the readSim(ros::Time& time, ros::Duration& period) function to use references.
 
 ## robot_hw_sim_latency
 
@@ -21,7 +17,7 @@ Simple example latency plugin using queues
 
 I assume a catkin workspace is already set up, and gazebo_ros_pkgs is [installed](http://gazebosim.org/tutorials?tut=ros_installing&cat=connect_ros). 
 
-1. Copy the three folders to your workspace
+1. Copy the two folders(robot_hw_sim_latency, latency_plugin_simple_queue) to your workspace
 2. Run `catkin_make`
 
 # Usage
