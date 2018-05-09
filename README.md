@@ -74,6 +74,17 @@ The working mechanism of the system is the following:
 15. Gazebo calculate the internal states of the simulation loop
 16. a new simulation loop is started by calling the update function of the gazebo_ros_control plugin
 
+# How to cite?
+```xml
+@article{gazebopluginconf,
+author = {G. Szabo and S. Racz and J. Peto and R. R. Aschoff},
+title = {On The Effects of The Variations In Network Characteristics In Cyber Physical Systems},
+journal = {In Proc., 31st European Simulation and Modelling Conference},
+year = {2017},
+month = {Oct.}
+location = {Lisbon, Portugal}
+}
+```
 
 # Expected output
 
