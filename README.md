@@ -100,32 +100,32 @@ location = {Lisbon, Portugal}
 # Digital Twin mode
 ## Web demo
 ### Installation
-Download and extract `_digital_twin_demo.tar.gz` from Digital twin demo in [Files | https://forge.ericsson.net/file/showfiles.php?group_id=576]
-In the folder run `catkin_make`, then `catkin_make install`
-If failed install dependencies
-Then `source install/setup.bash` in every opened terminal you intend to use
+1. Download and extract `_digital_twin_demo.tar.gz` from Digital twin demo in [Files | https://forge.ericsson.net/file/showfiles.php?group_id=576]
+2. In the folder run `catkin_make`, then `catkin_make install`
+3. If failed install dependencies
+4. Then `source install/setup.bash` in every opened terminal you intend to use
 
 ## Running
-In a terminal run `printf 'movej(~[3.14,-1.13,1.51,3.77,-1.51,0.0])\nend' | nc <ip.of.robot> 30002 &>/dev/null`
-Run `export SUDO_PASSWORD=<sudo password>`
-Run `cd /the/folder/you/extracted/to>`
-Run `source install/setup.bash`
-Run `roslaunch digital_twin_demo setup.launch robot_ip:=<ip.of.robot>`
-Open `http://localhost:8000/demo.html` in Chrome or Chromium
+1. In a terminal run `printf 'movej(~[3.14,-1.13,1.51,3.77,-1.51,0.0])\nend' | nc <ip.of.robot> 30002 &>/dev/null`
+2. Run `export SUDO_PASSWORD=<sudo password>`
+3. Run `cd /the/folder/you/extracted/to>`
+4. Run `source install/setup.bash`
+5. Run `roslaunch digital_twin_demo setup.launch robot_ip:=<ip.of.robot>`
+6. Open `http://localhost:8000/demo.html` in Chrome or Chromium
 
 
 ### Running demo with ursim
-Run `roslaunch osrf_gear figment_environment.launch competition:=finals/final01.yaml` in a terminal
-Run `gz world -m 4` to advance simulation by 4 ticks to work around some race conditions
-Run `rosrun ur5_vel_start run_in_network_namespace_with_latency.py "sudo -u user /home/user/ursim-3.5.3.10825/start-ursim.sh"=, if you want to set latency add =--delay <number>` to set it
-If you don't want to create a separate network namespace ou can run `start-ursim.sh` but then change IP in next step to 127.0.0.1
-Run `roslaunch ur5_vel_start setup.launch robot_ip:=10.0.1.2 sim:=false ns:=realur/ moveit:=false`
-Start simulation using gazebo gui
-Run `rosrun figment_ariac scheduler_plan`
+1. Run `roslaunch osrf_gear figment_environment.launch competition:=finals/final01.yaml` in a terminal
+2. Run `gz world -m 4` to advance simulation by 4 ticks to work around some race conditions
+3. Run `rosrun ur5_vel_start run_in_network_namespace_with_latency.py "sudo -u user /home/user/ursim-3.5.3.10825/start-ursim.sh"=, if you want to set latency add =--delay <number>` to set it
+4. If you don't want to create a separate network namespace ou can run `start-ursim.sh` but then change IP in next step to 127.0.0.1
+5. Run `roslaunch ur5_vel_start setup.launch robot_ip:=10.0.1.2 sim:=false ns:=realur/ moveit:=false`
+6. Start simulation using gazebo gui
+7. Run `rosrun figment_ariac scheduler_plan`
 
 ## To turn on/off QoC control of figment controller
-Open 'arm_actions.py' file in figment_ariac/gprt folder
-Uncomment/comment lines 'set_latency(20 if value=='Low' else 1)' in functions 'set_trajectory_precision' and `set_trajectory_precision_value` and change device in line `change_latency_cmd~='sudo -S tc qdisc change dev enp5s0 root netem  delay {delay}ms'</code> in =init()`
-Run `catkin_make install`
-Changing of latency will only work if a `sudo tc qdisc change dev enp5s0 root netem  delay {delay}ms` command was issued before running figment_ariac
+1. Open 'arm_actions.py' file in figment_ariac/gprt folder
+2. Uncomment/comment lines 'set_latency(20 if value=='Low' else 1)' in functions 'set_trajectory_precision' and `set_trajectory_precision_value` and change device in line `change_latency_cmd~='sudo -S tc qdisc change dev enp5s0 root netem  delay {delay}ms'</code> in =init()`
+3. Run `catkin_make install`
+4. Changing of latency will only work if a `sudo tc qdisc change dev enp5s0 root netem  delay {delay}ms` command was issued before running figment_ariac
 
