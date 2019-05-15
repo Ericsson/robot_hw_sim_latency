@@ -155,7 +155,7 @@ We also created a pull request to the roslaunch ~GitHub repository with this cha
 
 This way I can control the simulated and real UR arms independently.
 
-![Real UR5 rqt graph](https://github.com/Ericsson/robot_hw_sim_latency/edit/Digital-Twin----Kinetic/realur.png"Real UR5 rqt graph")
+![Real UR5 rqt graph](https://github.com/Ericsson/robot_hw_sim_latency/blob/Digital-Twin----Kinetic/realur.png" Real UR5 rqt graph")
 
 ROS Param configurations
 ```xml
