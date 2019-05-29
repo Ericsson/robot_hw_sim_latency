@@ -6,10 +6,24 @@ Modification of the [default_robot_hw_sim](https://github.com/ros-simulation/gaz
 # Digital Twin mode
 
 ## Installation
-1. Download and extract `_digital_twin_demo.tar.gz` from Digital twin demo in [Files | https://forge.ericsson.net/file/showfiles.php?group_id=576]
-2. In the folder run `catkin_make`, then `catkin_make install`
-3. If failed install dependencies
-4. Then `source install/setup.bash` in every opened terminal you intend to use
+1. Clone repository into a catkin workspace
+2. roslaunch maybe not needed because the missing feature was backported.
+3. Download `ur_modern_driver` `kinetic-devel` from source into the workspace, install `ur_description` and `ur_gazebo`
+4. In the folder run `catkin_make`, then `catkin_make install`
+5. If failed install dependencies
+6. Then `source install/setup.bash` in every opened terminal you intend to use
+
+## Packages in the repository
+Package      | Description
+------------ | -------------
+ariac | [ARIAC 2017 modified](https://bitbucket.org/osrf/ariac/src/ariac_2017/) to support pos-vel control
+digital_twin_demo | Webpage and main launch file
+figment | [Figment team's solution](https://github.com/Figment-Gprt/ariac-competition) to ARIAC 2017 modified
+roslaunch | Kinetic roslaunch package with [this modification](https://github.com/ros/ros_comm/pull/1354). Maybe not needed because the feature was backported.
+latency_plugin_velocity_control | Instead of latency, send commands to a real ur5 robot, and use its status as a command to the simulation
+latency_plugin_velocity_publisher | Instead of latency, send commands to a real ur5 robot
+ur5_vel_start | Launch files to start ur5 in specific configurations (moveit/not moveit, namespaced)
+
 
 ## Running
 1. In a terminal run `printf 'movej(~[3.14,-1.13,1.51,3.77,-1.51,0.0])\nend' | nc <ip.of.robot> 30002 &>/dev/null`
