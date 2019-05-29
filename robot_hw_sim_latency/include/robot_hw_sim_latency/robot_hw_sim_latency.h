@@ -43,6 +43,7 @@
 // ros_control
 #include <control_toolbox/pid.h>
 #include <hardware_interface/joint_command_interface.h>
+#include <hardware_interface/posvel_command_interface.h>
 #include <hardware_interface/robot_hw.h>
 #include <joint_limits_interface/joint_limits.h>
 #include <joint_limits_interface/joint_limits_interface.h>
@@ -91,7 +92,7 @@ public:
 
 protected:
   // Methods used to control a joint.
-  enum ControlMethod {EFFORT, POSITION, POSITION_PID, VELOCITY, VELOCITY_PID};
+  enum ControlMethod {EFFORT, POSITION, POSITION_PID, VELOCITY, VELOCITY_PID, POS_VEL, POS_VEL_PID};
 
   // Register the limits of the joint specified by joint_name and joint_handle. The limits are
   // retrieved from joint_limit_nh. If urdf_model is not NULL, limits are retrieved from it also.
@@ -112,6 +113,7 @@ protected:
   hardware_interface::EffortJointInterface   ej_interface_;
   hardware_interface::PositionJointInterface pj_interface_;
   hardware_interface::VelocityJointInterface vj_interface_;
+  hardware_interface::PosVelJointInterface   pvj_interface_;
 
   joint_limits_interface::EffortJointSaturationInterface   ej_sat_interface_;
   joint_limits_interface::EffortJointSoftLimitsInterface   ej_limits_interface_;

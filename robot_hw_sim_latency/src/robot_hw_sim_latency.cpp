@@ -38,33 +38,24 @@
    Desc:   Hardware Interface for any simulated robot in Gazebo
 */
 
-
 #include <robot_hw_sim_latency/robot_hw_sim_latency.h>
 #include <robot_hw_sim_latency/sim_latency_plugin.h>
 #include <urdf/model.h>
 #include <tuple>
 
-
 namespace
 {
-
 double clamp(const double val, const double min_val, const double max_val)
 {
   return std::min(std::max(val, min_val), max_val);
 }
-
 }
 
 namespace robot_hw_sim_latency
 {
-
-
-bool RobotHWSimLatency::initSim(
-  const std::string& robot_namespace,
-  ros::NodeHandle model_nh,
-  gazebo::physics::ModelPtr parent_model,
-  const urdf::Model *const urdf_model,
-  std::vector<transmission_interface::TransmissionInfo> transmissions)
+bool RobotHWSimLatency::initSim(const std::string& robot_namespace, ros::NodeHandle model_nh,
+                                gazebo::physics::ModelPtr parent_model, const urdf::Model* const urdf_model,
+                                std::vector<transmission_interface::TransmissionInfo> transmissions)
 {
   // getJointLimits() searches joint_limit_nh for joint limit parameters. The format of each
   // parameter's name is "joint_limits/<joint name>". An example is "joint_limits/axle_joint".
@@ -78,87 +69,88 @@ bool RobotHWSimLatency::initSim(
   joint_upper_limits_.resize(n_dof_);
   joint_effort_limits_.resize(n_dof_);
   joint_control_methods_.resize(n_dof_);
-  pid_controllers_.resize(n_dof_);
-  
+  pid_controllers_.resize(n_dof_ * 2);  // To allow using 2 pids to control when using POS_VEL_PID
+
   current_joint_position_.resize(n_dof_);
   current_joint_velocity_.resize(n_dof_);
   current_joint_effort_.resize(n_dof_);
-  
+
   hw_joint_position_.resize(n_dof_);
   hw_joint_velocity_.resize(n_dof_);
   hw_joint_effort_.resize(n_dof_);
-  
+
   current_joint_effort_command_.resize(n_dof_);
   current_joint_position_command_.resize(n_dof_);
   current_joint_velocity_command_.resize(n_dof_);
-  
+
   delayed_joint_position_.resize(n_dof_);
   delayed_joint_velocity_.resize(n_dof_);
   delayed_joint_effort_.resize(n_dof_);
-  
+
   delayed_joint_position_command_.resize(n_dof_);
   delayed_joint_velocity_command_.resize(n_dof_);
   delayed_joint_effort_command_.resize(n_dof_);
-  
+
   std::string latency_plugin_str;
-  sim_latency_plugin_loader_.reset(new pluginlib::ClassLoader<robot_hw_sim_latency::SimLatencyPlugin>("robot_hw_sim_latency", "robot_hw_sim_latency::SimLatencyPlugin"));
-  model_nh.param<std::string>("/robot_hw_sim_latency/latency_plugin", latency_plugin_str, "robot_hw_sim_latency/DefaultSimLatencyPlugin");
-  try
-  {
+  sim_latency_plugin_loader_.reset(new pluginlib::ClassLoader<robot_hw_sim_latency::SimLatencyPlugin>(
+      "robot_hw_sim_latency", "robot_hw_sim_latency::SimLatencyPlugin"));
+  model_nh.param<std::string>("/robot_hw_sim_latency/latency_plugin", latency_plugin_str, "robot_hw_sim_latency/"
+                                                                                          "DefaultSimLatencyPlugin");
+                                                                                          
+  ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Loading latency plugin: " << latency_plugin_str );
+  
+  try {
     latency_plugin_ = sim_latency_plugin_loader_->createInstance(latency_plugin_str);
   }
-  catch (pluginlib::PluginlibException& ex)
-  {
+  catch (pluginlib::PluginlibException& ex) {
     ROS_FATAL_STREAM_NAMED("robot_hw_sim_latency", "Couldn't load latency plugin " << ex.what());
     return false;
   }
-  
+
   latency_plugin_->initPlugin(robot_namespace, model_nh, n_dof_);
-  
 
   // Initialize values
-  for(unsigned int j=0; j < n_dof_; j++)
-  {
+  ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Loading " << n_dof_ << " joints");
+
+  for (unsigned int j = 0; j < n_dof_; j++) {
     // Check that this transmission has one joint
-    if(transmissions[j].joints_.size() == 0)
-    {
-      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","Transmission " << transmissions[j].name_
-        << " has no associated joints.");
+    if (transmissions[j].joints_.size() == 0) {
+      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Transmission " << transmissions[j].name_ << " has no associated "
+                                                                                                 "joints.");
       continue;
-    }
-    else if(transmissions[j].joints_.size() > 1)
-    {
-      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","Transmission " << transmissions[j].name_
-        << " has more than one joint. Currently the default robot hardware simulation "
-        << " interface only supports one.");
+    } else if (transmissions[j].joints_.size() > 1) {
+      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Transmission " << transmissions[j].name_
+                                                                    << " has more than one joint. Currently the "
+                                                                       "default robot hardware simulation "
+                                                                    << " interface only supports one.");
       continue;
     }
 
     std::vector<std::string> joint_interfaces = transmissions[j].joints_[0].hardware_interfaces_;
-    if (joint_interfaces.empty() &&
-        !(transmissions[j].actuators_.empty()) &&
-        !(transmissions[j].actuators_[0].hardware_interfaces_.empty()))
-    {
+    if (joint_interfaces.empty() && !(transmissions[j].actuators_.empty()) &&
+        !(transmissions[j].actuators_[0].hardware_interfaces_.empty())) {
       // TODO: Deprecate HW interface specification in actuators in ROS J
       joint_interfaces = transmissions[j].actuators_[0].hardware_interfaces_;
-      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "The <hardware_interface> element of tranmission " <<
-        transmissions[j].name_ << " should be nested inside the <joint> element, not <actuator>. " <<
-        "The transmission will be properly loaded, but please update " <<
-        "your robot model to remain compatible with future versions of the plugin.");
+      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency",
+                            "The <hardware_interface> element of tranmission "
+                                << transmissions[j].name_
+                                << " should be nested inside the <joint> element, not <actuator>. "
+                                << "The transmission will be properly loaded, but please update "
+                                << "your robot model to remain compatible with future versions of the plugin.");
     }
-    if (joint_interfaces.empty())
-    {
-      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Joint " << transmissions[j].joints_[0].name_ <<
-        " of transmission " << transmissions[j].name_ << " does not specify any hardware interface. " <<
-        "Not adding it to the robot hardware simulation.");
+    if (joint_interfaces.empty()) {
+      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Joint " << transmissions[j].joints_[0].name_ << " of transmission "
+                                                             << transmissions[j].name_
+                                                             << " does not specify any hardware interface. "
+                                                             << "Not adding it to the robot hardware simulation.");
       continue;
-    }
-    else if (joint_interfaces.size() > 1)
-    {
-      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Joint " << transmissions[j].joints_[0].name_ <<
-        " of transmission " << transmissions[j].name_ << " specifies multiple hardware interfaces. " <<
-        "Currently the default robot hardware simulation interface only supports one. Using the first entry!");
-      //continue;
+    } else if (joint_interfaces.size() > 1) {
+      ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Joint " << transmissions[j].joints_[0].name_ << " of transmission "
+                                                             << transmissions[j].name_
+                                                             << " specifies multiple hardware interfaces. "
+                                                             << "Currently the default robot hardware simulation "
+                                                                "interface only supports one. Using the first entry!");
+      // continue;
     }
 
     // Add data from transmission
@@ -173,92 +165,100 @@ bool RobotHWSimLatency::initSim(
     const std::string& hardware_interface = joint_interfaces.front();
 
     // Debug
-    ROS_DEBUG_STREAM_NAMED("robot_hw_sim_latency","Loading joint '" << joint_names_[j]
-      << "' of type '" << hardware_interface << "'");
+    ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Loading joint " << j << " '" << joint_names_[j] << "' of type '"
+                                                                   << hardware_interface << "'");
 
     // Create joint state interface for all joints
-    js_interface_.registerHandle(hardware_interface::JointStateHandle(
-        joint_names_[j], &hw_joint_position_[j], &hw_joint_velocity_[j], &hw_joint_effort_[j]));
-    
-    //DEBUG REMOVE
-    //ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<< joint_names_[j] << " address: "<<&joint_position_[j]);
+    js_interface_.registerHandle(hardware_interface::JointStateHandle(joint_names_[j], &hw_joint_position_[j],
+                                                                      &hw_joint_velocity_[j], &hw_joint_effort_[j]));
+
+    // DEBUG REMOVE
+    // ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<<j<<": "<< joint_names_[j]);
 
     // Decide what kind of command interface this actuator/joint has
     hardware_interface::JointHandle joint_handle;
-    if(hardware_interface == "EffortJointInterface" || hardware_interface == "hardware_interface/EffortJointInterface")
-    {
+    hardware_interface::PosVelJointHandle pv_joint_handle;
+
+    if (hardware_interface == "EffortJointInterface" ||
+        hardware_interface == "hardware_interface/"
+                              "EffortJointInterface") {
       // Create effort joint interface
       joint_control_methods_[j] = EFFORT;
-      joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
-                                                     &current_joint_effort_command_[j]);
+      joint_handle =
+          hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]), &current_joint_effort_command_[j]);
       ej_interface_.registerHandle(joint_handle);
-    }
-    else if(hardware_interface == "PositionJointInterface" || hardware_interface == "hardware_interface/PositionJointInterface")
-    {
+    } else if (hardware_interface == "PositionJointInterface" ||
+               hardware_interface == "hardware_interface/"
+                                     "PositionJointInterface") {
       // Create position joint interface
       joint_control_methods_[j] = POSITION;
       joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
                                                      &current_joint_position_command_[j]);
       pj_interface_.registerHandle(joint_handle);
-    }
-    else if(hardware_interface == "VelocityJointInterface" || hardware_interface == "hardware_interface/VelocityJointInterface")
-    {
+    } else if (hardware_interface == "VelocityJointInterface" ||
+               hardware_interface == "hardware_interface/"
+                                     "VelocityJointInterface") {
       // Create velocity joint interface
       joint_control_methods_[j] = VELOCITY;
       joint_handle = hardware_interface::JointHandle(js_interface_.getHandle(joint_names_[j]),
                                                      &current_joint_velocity_command_[j]);
       vj_interface_.registerHandle(joint_handle);
-    }
-    else
-    {
-      ROS_FATAL_STREAM_NAMED("robot_hw_sim_latency","No matching hardware interface found for '"
-        << hardware_interface << "' while loading interfaces for " << joint_names_[j] );
+    } else if (hardware_interface == "PosVelJointInterface" ||
+               hardware_interface == "hardware_interface/"
+                                     "PosVelJointInterface") {
+      // Create velocity joint interface
+      joint_control_methods_[j] = POS_VEL;
+      pv_joint_handle = hardware_interface::PosVelJointHandle(js_interface_.getHandle(joint_names_[j]),
+                                                              &current_joint_position_command_[j],
+                                                              &current_joint_velocity_command_[j]);
+      pvj_interface_.registerHandle(pv_joint_handle);
+    } else {
+      ROS_FATAL_STREAM_NAMED("robot_hw_sim_latency", "No matching hardware interface found for '"
+                                                         << hardware_interface << "' while loading interfaces for "
+                                                         << joint_names_[j]);
       return false;
     }
 
-    if(hardware_interface == "EffortJointInterface" || hardware_interface == "PositionJointInterface" || hardware_interface == "VelocityJointInterface") {
-      ROS_WARN_STREAM("Deprecated syntax, please prepend 'hardware_interface/' to '" << hardware_interface << "' within the <hardwareInterface> tag in joint '" << joint_names_[j] << "'.");
+    if (hardware_interface.find("hardware_interface/") != 0) {
+      ROS_WARN_STREAM("Deprecated syntax, please prepend 'hardware_interface/' to '"
+                      << hardware_interface << "' within the <hardwareInterface> tag in joint '" << joint_names_[j]
+                      << "'.");
     }
 
     // Get the gazebo joint that corresponds to the robot joint.
-    //ROS_DEBUG_STREAM_NAMED("robot_hw_sim_latency", "Getting pointer to gazebo joint: "
+    // ROS_DEBUG_STREAM_NAMED("robot_hw_sim_latency", "Getting pointer to gazebo joint: "
     //  << joint_names_[j]);
     gazebo::physics::JointPtr joint = parent_model->GetJoint(joint_names_[j]);
-    if (!joint)
-    {
-      ROS_ERROR_STREAM_NAMED("robot_hw_sim_latency", "This robot has a joint named \"" << joint_names_[j]
-        << "\" which is not in the gazebo model.");
+    if (!joint) {
+      ROS_ERROR_STREAM_NAMED("robot_hw_sim_latency", "This robot has a joint named \""
+                                                         << joint_names_[j] << "\" which is not in the gazebo model.");
       return false;
     }
     sim_joints_.push_back(joint);
 
-    registerJointLimits(joint_names_[j], joint_handle, joint_control_methods_[j],
-                        joint_limit_nh, urdf_model,
-                        &joint_types_[j], &joint_lower_limits_[j], &joint_upper_limits_[j],
-                        &joint_effort_limits_[j]);
-    if (joint_control_methods_[j] != EFFORT)
-    {
+    registerJointLimits(joint_names_[j], joint_handle, joint_control_methods_[j], joint_limit_nh, urdf_model,
+                        &joint_types_[j], &joint_lower_limits_[j], &joint_upper_limits_[j], &joint_effort_limits_[j]);
+    if (joint_control_methods_[j] != EFFORT) {
       // Initialize the PID controller. If no PID gain values are found, use joint->SetAngle() or
       // joint->SetParam("vel") to control the joint.
-      const ros::NodeHandle nh(model_nh, "/gazebo_ros_control/pid_gains/" +
-                               joint_names_[j]);
-      if (pid_controllers_[j].init(nh, true))
-      {
-        switch (joint_control_methods_[j])
-        {
+      const ros::NodeHandle nh(model_nh, "/gazebo_ros_control/pid_gains/" + joint_names_[j]);
+      if (pid_controllers_[j].init(nh, true)) {
+        switch (joint_control_methods_[j]) {
           case POSITION:
             joint_control_methods_[j] = POSITION_PID;
             break;
           case VELOCITY:
             joint_control_methods_[j] = VELOCITY_PID;
             break;
+          case POS_VEL:
+            joint_control_methods_[j] = POS_VEL_PID;
+            pid_controllers_[j + n_dof_].initPid(0.05, 0, 0, 0, 0);
+            break;
         }
-      }
-      else
-      {
-        // joint->SetParam("fmax") must be called if joint->SetAngle() or joint->SetParam("vel") are
-        // going to be called. joint->SetParam("fmax") must *not* be called if joint->SetForce() is
-        // going to be called.
+      } else {
+// joint->SetParam("fmax") must be called if joint->SetAngle() or joint->SetParam("vel") are
+// going to be called. joint->SetParam("fmax") must *not* be called if joint->SetForce() is
+// going to be called.
 #if GAZEBO_MAJOR_VERSION > 2
         joint->SetParam("fmax", 0, joint_effort_limits_[j]);
 #else
@@ -273,92 +273,87 @@ bool RobotHWSimLatency::initSim(
   registerInterface(&ej_interface_);
   registerInterface(&pj_interface_);
   registerInterface(&vj_interface_);
+  registerInterface(&pvj_interface_);
 
   // Initialize the emergency stop code.
   e_stop_active_ = false;
   last_e_stop_active_ = false;
+  ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Joints loaded");
 
   return true;
 }
 
 void RobotHWSimLatency::readSim(ros::Time time, ros::Duration period)
 {
-
   for (unsigned int j = 0; j < n_dof_; j++) {
     // Gazebo has an interesting API...
     if (joint_types_[j] == urdf::Joint::PRISMATIC) {
       current_joint_position_[j] = sim_joints_[j]->GetAngle(0).Radian();
-    }
-    else
-    {
+      // ROS_WARN_STREAM_ONCE_NAMED("robot_hw_sim_latency", "PRISM");
+    } else {
       current_joint_position_[j] +=
           angles::shortest_angular_distance(current_joint_position_[j], sim_joints_[j]->GetAngle(0).Radian());
     }
     current_joint_velocity_[j] = sim_joints_[j]->GetVelocity(0);
+    //("robot_hw_sim_latency","joint "<< joint_names_[j] << " cvel: "<<current_joint_velocity_[j]<< " cpos:
+    //"<<current_joint_position_[j]);
     current_joint_effort_[j] = sim_joints_[j]->GetForce((unsigned int)(0));
   }
 
   std::tie(std::ignore, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_) =
-      latency_plugin_->delayStates(time, period, current_joint_position_, current_joint_velocity_, current_joint_effort_);
-      
-  //std::copy doesn't change the address of the contained data (that is needed by the hw interface), like the copy assignment on previous line
-  copyToHWInterface();
-  
-  //for(int i = 0;i<6;i++){
-    //DEBUG REMOVE
-  //  ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<< joint_names_[i] << " address: "<<&hw_joint_position_[i]);
-  //}
+      latency_plugin_->delayStates(time, period, current_joint_position_, current_joint_velocity_,
+                                   current_joint_effort_);
 
-   
+  // std::copy doesn't change the address of the contained data (that is needed by the hw interface), like the copy
+  // assignment on previous line
+  copyToHWInterface();
+
+  // for(int i = 0;i<n_dof_;i++){
+  //  ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<< joint_names_[i] << " dvel: "<<delayed_joint_velocity_[i]);
+  //}
 }
 
 void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
 {
   ros::Time time;
   ros::Duration period;
-  
-  //for(int i = 0;i<6;i++){
-  //    ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command "<<joint_names_[i]<<":"<<temp_joint_position_[i] << ":" << joint_position_[i]);
-  //}
-  
 
-  
-  std::tie(std::ignore, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, delayed_joint_position_command_, delayed_joint_velocity_command_, delayed_joint_effort_command_) =
-      latency_plugin_->delayCommands(time_, period_, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_, current_joint_position_command_, current_joint_velocity_command_, current_joint_effort_command_);
-      
+  // for(int i = 0;i<6;i++){
+  //    ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command "<<joint_names_[i]<<":"<<temp_joint_position_[i] << ":"
+  //    << joint_position_[i]);
+  //}
+
+  std::tie(std::ignore, period, delayed_joint_position_, delayed_joint_velocity_, delayed_joint_effort_,
+           delayed_joint_position_command_, delayed_joint_velocity_command_, delayed_joint_effort_command_) =
+      latency_plugin_->delayCommands(time_, period_, delayed_joint_position_, delayed_joint_velocity_,
+                                     delayed_joint_effort_, current_joint_position_command_,
+                                     current_joint_velocity_command_, current_joint_effort_command_);
+
   ej_sat_interface_.enforceLimits(period);
   ej_limits_interface_.enforceLimits(period);
   pj_sat_interface_.enforceLimits(period);
   pj_limits_interface_.enforceLimits(period);
   vj_sat_interface_.enforceLimits(period);
   vj_limits_interface_.enforceLimits(period);
-  //ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command time: "<<time<< " " << time_);
-  
+  // ROS_INFO_STREAM_NAMED("robot_hw_sim_latency", "command time: "<<time<< " " << time_);
+
   // If the E-stop is active, joints controlled by position commands will maintain their positions.
-  if (e_stop_active_)
-  {
-    if (!last_e_stop_active_)
-    {
+  if (e_stop_active_) {
+    if (!last_e_stop_active_) {
       last_joint_position_command_ = current_joint_position_;
       last_e_stop_active_ = true;
     }
     delayed_joint_position_command_ = last_joint_position_command_;
-  }
-  else
-  {
+  } else {
     last_e_stop_active_ = false;
   }
 
-  for(unsigned int j=0; j < n_dof_; j++)
-  {
-    switch (joint_control_methods_[j])
-    {
-      case EFFORT:
-        {
-          const double effort = e_stop_active_ ? 0 : delayed_joint_effort_command_[j];
-          sim_joints_[j]->SetForce(0, effort);
-        }
-        break;
+  for (unsigned int j = 0; j < n_dof_; j++) {
+    switch (joint_control_methods_[j]) {
+      case EFFORT: {
+        const double effort = e_stop_active_ ? 0 : delayed_joint_effort_command_[j];
+        sim_joints_[j]->SetForce(0, effort);
+      } break;
 
       case POSITION:
 #if GAZEBO_MAJOR_VERSION >= 4
@@ -368,32 +363,24 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
 #endif
         break;
 
-      case POSITION_PID:
-        {
-          double error;
-          switch (joint_types_[j])
-          {
-            case urdf::Joint::REVOLUTE:
-              angles::shortest_angular_distance_with_limits(current_joint_position_[j],
-                                                            delayed_joint_position_command_[j],
-                                                            joint_lower_limits_[j],
-                                                            joint_upper_limits_[j],
-                                                            error);
-              break;
-            case urdf::Joint::CONTINUOUS:
-              error = angles::shortest_angular_distance(current_joint_position_[j],
-                                                        delayed_joint_position_command_[j]);
-              break;
-            default:
-              error = delayed_joint_position_command_[j] - current_joint_position_[j];
-          }
-
-          const double effort_limit = joint_effort_limits_[j];
-          const double effort = clamp(pid_controllers_[j].computeCommand(error, period),
-                                      -effort_limit, effort_limit);
-          sim_joints_[j]->SetForce(0, effort);
+      case POSITION_PID: {
+        double error;
+        switch (joint_types_[j]) {
+          case urdf::Joint::REVOLUTE:
+            angles::shortest_angular_distance_with_limits(current_joint_position_[j],
+                                                          delayed_joint_position_command_[j], joint_lower_limits_[j],
+                                                          joint_upper_limits_[j], error);
+            break;
+          case urdf::Joint::CONTINUOUS:
+            error = angles::shortest_angular_distance(current_joint_position_[j], delayed_joint_position_command_[j]);
+            break;
+          default:
+            error = delayed_joint_position_command_[j] - current_joint_position_[j];
         }
-        break;
+        const double effort_limit = joint_effort_limits_[j];
+        const double effort = clamp(pid_controllers_[j].computeCommand(error, period), -effort_limit, effort_limit);
+        sim_joints_[j]->SetForce(0, effort);
+      } break;
 
       case VELOCITY:
 #if GAZEBO_MAJOR_VERSION > 2
@@ -403,45 +390,95 @@ void RobotHWSimLatency::writeSim(ros::Time time_, ros::Duration period_)
 #endif
         break;
 
-      case VELOCITY_PID:
+      case VELOCITY_PID: {
         double error;
         if (e_stop_active_)
           error = -current_joint_velocity_[j];
         else
           error = delayed_joint_velocity_command_[j] - current_joint_velocity_[j];
         const double effort_limit = joint_effort_limits_[j];
-        const double effort = clamp(pid_controllers_[j].computeCommand(error, period),
-                                    -effort_limit, effort_limit);
+        const double effort = clamp(pid_controllers_[j].computeCommand(error, period), -effort_limit, effort_limit);
         sim_joints_[j]->SetForce(0, effort);
-        //ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<< joint_names_[j] << " velerror: "<<error<< " effort: "<<effort);
-        break;
+        // ROS_WARN_STREAM_NAMED("robot_hw_sim_latency","joint "<< joint_names_[j] << " velerror: "<<error<< " effort:
+        // "<<effort);
+      } break;
+
+      case POS_VEL: {
+#if GAZEBO_MAJOR_VERSION >= 4
+        sim_joints_[j]->SetPosition(0, delayed_joint_position_command_[j]);
+#else
+        sim_joints_[j]->SetAngle(0, delayed_joint_position_command_[j]);
+#endif
+#if GAZEBO_MAJOR_VERSION > 2
+        sim_joints_[j]->SetParam("vel", 0, e_stop_active_ ? 0 : delayed_joint_velocity_command_[j]);
+#else
+        sim_joints_[j]->SetVelocity(0, e_stop_active_ ? 0 : delayed_joint_velocity_command_[j]);
+#endif
+      } break;
+
+      case POS_VEL_PID: {
+        double error;
+
+        // Pos PID
+        // switch (joint_types_[j]) {
+        // case urdf::Joint::REVOLUTE:
+        // angles::shortest_angular_distance_with_limits(current_joint_position_[j],
+        // delayed_joint_position_command_[j], joint_lower_limits_[j],
+        // joint_upper_limits_[j], error);
+        // if (j==5)ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "posc: " << delayed_joint_position_command_[j]<< "
+        // poss: " << current_joint_position_[j] << " err: " << error);
+        // break;
+        // case urdf::Joint::CONTINUOUS:
+        // error = angles::shortest_angular_distance(current_joint_position_[j], delayed_joint_position_command_[j]);
+        // break;
+        // default:
+
+        //}
+        error = delayed_joint_position_command_[j] - current_joint_position_[j];
+        if (std::abs(error) < 0.0005) {
+          error = 0;
+        }
+        // ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", joint_names_[j] << " posc: " <<
+        // delayed_joint_position_command_[j]
+        //<< " poss: " << current_joint_position_[j]);
+        error /= period_.toSec();
+        double vel_command =
+            delayed_joint_velocity_command_[j] + pid_controllers_[j + n_dof_].computeCommand(error, period);
+        // ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", joint_names_[j] << " ff" << delayed_joint_velocity_command_[j]
+        //<< " velcomm: " << vel_command);
+
+        // Vel PID
+        if (e_stop_active_)
+          error = -current_joint_velocity_[j];
+        else
+          error = vel_command - current_joint_velocity_[j];
+        const double effort_limit = joint_effort_limits_[j];
+        const double effort = clamp(pid_controllers_[j].computeCommand(error, period), -effort_limit, effort_limit);
+        sim_joints_[j]->SetForce(0, effort);
+        // ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", joint_names_[j] << " curr: " << current_joint_velocity_[j]<< "
+        // comm: " << vel_command<< " eff: " << effort);
+      } break;
     }
   }
 }
 
-void RobotHWSimLatency::copyToHWInterface(){
-  std::copy(delayed_joint_position_.begin(),delayed_joint_position_.end(),hw_joint_position_.begin());
-  std::copy(delayed_joint_velocity_.begin(),delayed_joint_velocity_.end(),hw_joint_velocity_.begin());
-  std::copy(delayed_joint_effort_.begin(),delayed_joint_effort_.end(),hw_joint_effort_.begin());
-
-  
-}
-
-void RobotHWSimLatency::eStopActive(const bool active)
+void RobotHWSimLatency::copyToHWInterface()
 {
-  e_stop_active_ = active;
+  std::copy(delayed_joint_position_.begin(), delayed_joint_position_.end(), hw_joint_position_.begin());
+  std::copy(delayed_joint_velocity_.begin(), delayed_joint_velocity_.end(), hw_joint_velocity_.begin());
+  std::copy(delayed_joint_effort_.begin(), delayed_joint_effort_.end(), hw_joint_effort_.begin());
 }
 
+void RobotHWSimLatency::eStopActive(const bool active) { e_stop_active_ = active; }
 // Register the limits of the joint specified by joint_name and joint_handle. The limits are
 // retrieved from joint_limit_nh. If urdf_model is not NULL, limits are retrieved from it also.
 // Return the joint's type, lower position limit, upper position limit, and effort limit.
 void RobotHWSimLatency::registerJointLimits(const std::string& joint_name,
-                         const hardware_interface::JointHandle& joint_handle,
-                         const ControlMethod ctrl_method,
-                         const ros::NodeHandle& joint_limit_nh,
-                         const urdf::Model *const urdf_model,
-                         int *const joint_type, double *const lower_limit,
-                         double *const upper_limit, double *const effort_limit)
+                                            const hardware_interface::JointHandle& joint_handle,
+                                            const ControlMethod ctrl_method, const ros::NodeHandle& joint_limit_nh,
+                                            const urdf::Model* const urdf_model, int* const joint_type,
+                                            double* const lower_limit, double* const upper_limit,
+                                            double* const effort_limit)
 {
   *joint_type = urdf::Joint::UNKNOWN;
   *lower_limit = -std::numeric_limits<double>::max();
@@ -453,11 +490,9 @@ void RobotHWSimLatency::registerJointLimits(const std::string& joint_name,
   joint_limits_interface::SoftJointLimits soft_limits;
   bool has_soft_limits = false;
 
-  if (urdf_model != NULL)
-  {
+  if (urdf_model != NULL) {
     const urdf::JointConstSharedPtr urdf_joint = urdf_model->getJoint(joint_name);
-    if (urdf_joint != NULL)
-    {
+    if (urdf_joint != NULL) {
       *joint_type = urdf_joint->type;
       // Get limits from the URDF file.
       if (joint_limits_interface::getJointLimits(urdf_joint, limits))
@@ -473,16 +508,12 @@ void RobotHWSimLatency::registerJointLimits(const std::string& joint_name,
   if (!has_limits)
     return;
 
-  if (*joint_type == urdf::Joint::UNKNOWN)
-  {
+  if (*joint_type == urdf::Joint::UNKNOWN) {
     // Infer the joint type.
 
-    if (limits.has_position_limits)
-    {
+    if (limits.has_position_limits) {
       *joint_type = urdf::Joint::REVOLUTE;
-    }
-    else
-    {
+    } else {
       if (limits.angle_wraparound)
         *joint_type = urdf::Joint::CONTINUOUS;
       else
@@ -490,70 +521,66 @@ void RobotHWSimLatency::registerJointLimits(const std::string& joint_name,
     }
   }
 
-  if (limits.has_position_limits)
-  {
+  if (limits.has_position_limits) {
     *lower_limit = limits.min_position;
     *upper_limit = limits.max_position;
   }
   if (limits.has_effort_limits)
     *effort_limit = limits.max_effort;
 
-  if (has_soft_limits)
-  {
-    switch (ctrl_method)
-    {
-      case EFFORT:
-        {
-          const joint_limits_interface::EffortJointSoftLimitsHandle
-            limits_handle(joint_handle, limits, soft_limits);
-          ej_limits_interface_.registerHandle(limits_handle);
-        }
-        break;
-      case POSITION:
-        {
-          const joint_limits_interface::PositionJointSoftLimitsHandle
-            limits_handle(joint_handle, limits, soft_limits);
-          pj_limits_interface_.registerHandle(limits_handle);
-        }
-        break;
-      case VELOCITY:
-        {
-          const joint_limits_interface::VelocityJointSoftLimitsHandle
-            limits_handle(joint_handle, limits, soft_limits);
-          vj_limits_interface_.registerHandle(limits_handle);
-        }
-        break;
+  if (has_soft_limits) {
+    switch (ctrl_method) {
+      case EFFORT: {
+        const joint_limits_interface::EffortJointSoftLimitsHandle limits_handle(joint_handle, limits, soft_limits);
+        ej_limits_interface_.registerHandle(limits_handle);
+      } break;
+      case POSITION: {
+        const joint_limits_interface::PositionJointSoftLimitsHandle limits_handle(joint_handle, limits, soft_limits);
+        pj_limits_interface_.registerHandle(limits_handle);
+      } break;
+      case VELOCITY: {
+        const joint_limits_interface::VelocityJointSoftLimitsHandle limits_handle(joint_handle, limits, soft_limits);
+        vj_limits_interface_.registerHandle(limits_handle);
+      } break;
+      case POS_VEL: {
+        return;
+#if 0  // No LimitsHandle for Posveljointhandle
+        const joint_limits_interface::PositionJointSoftLimitsHandle limits_handle_pos(joint_handle, limits,
+                                                                                      soft_limits);
+        pj_limits_interface_.registerHandle(limits_handle_pos);
+        const joint_limits_interface::VelocityJointSoftLimitsHandle limits_handle_vel(joint_handle, limits,
+                                                                                      soft_limits);
+        vj_limits_interface_.registerHandle(limits_handle_vel);
+#endif
+      } break;
     }
-  }
-  else
-  {
-    switch (ctrl_method)
-    {
-      case EFFORT:
-        {
-          const joint_limits_interface::EffortJointSaturationHandle
-            sat_handle(joint_handle, limits);
-          ej_sat_interface_.registerHandle(sat_handle);
-        }
-        break;
-      case POSITION:
-        {
-          const joint_limits_interface::PositionJointSaturationHandle
-            sat_handle(joint_handle, limits);
-          pj_sat_interface_.registerHandle(sat_handle);
-        }
-        break;
-      case VELOCITY:
-        {
-          const joint_limits_interface::VelocityJointSaturationHandle
-            sat_handle(joint_handle, limits);
-          vj_sat_interface_.registerHandle(sat_handle);
-        }
-        break;
+  } else {
+    switch (ctrl_method) {
+      case EFFORT: {
+        const joint_limits_interface::EffortJointSaturationHandle sat_handle(joint_handle, limits);
+        ej_sat_interface_.registerHandle(sat_handle);
+      } break;
+      case POSITION: {
+        const joint_limits_interface::PositionJointSaturationHandle sat_handle(joint_handle, limits);
+        pj_sat_interface_.registerHandle(sat_handle);
+      } break;
+      case VELOCITY: {
+        const joint_limits_interface::VelocityJointSaturationHandle sat_handle(joint_handle, limits);
+        vj_sat_interface_.registerHandle(sat_handle);
+      } break;
+
+      case POS_VEL: {
+        return;
+#if 0
+        const joint_limits_interface::PositionJointSaturationHandle sat_handle_pos(joint_handle, limits);
+        pj_sat_interface_.registerHandle(sat_handle_pos);
+        const joint_limits_interface::VelocityJointSaturationHandle sat_handle_vel(joint_handle, limits);
+        vj_sat_interface_.registerHandle(sat_handle_vel);
+#endif
+      } break;
     }
   }
 }
-
 }
 
 PLUGINLIB_EXPORT_CLASS(robot_hw_sim_latency::RobotHWSimLatency, gazebo_ros_control::RobotHWSim)
