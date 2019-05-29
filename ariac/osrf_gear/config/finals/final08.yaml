@@ -1,0 +1,102 @@
+# In this scenario:
+# - there is one order of two kits.
+# - a part in the bins gets dropped.
+# - a part dropped over AGV1 must be re-positioned in the tray for full points.
+# - a part dropped off AGV2 must be replaced for full points.
+
+# Competition configuration options
+options:
+  insert_models_over_bins: true     # Whether or not to insert the models that are specified in models_over_bins
+  spawn_extra_models: false          # Whether or not to spawn the models that are specified in models_to_spawn
+  fill_demo_tray: false             # If true, AGV1's tray will have parts from the first order spawned
+                                    # directly ontop of it once the competition starts (for testing purposes)
+  gazebo_state_logging: true        # Whether or not to generate a gazebo state log
+  model_type_aliases:               # Aliases for model types which can be used in the configuration file
+    dropped_part1: pulley_part
+    dropped_part2: gear_part
+    dropped_part3: disk_part
+
+time_limit: 500                      # Maximum time allowed for the trial once started, in seconds
+
+# Orders to announce during the game
+orders:
+  order_0:
+    announcement_condition: time     # Announce the order base on elapsed time
+    announcement_condition_value: 0  # Time in seconds to wait before announcing the order
+    kit_count: 2                     # How many of the same kit are in the order
+    parts:                           # List of parts required to be in the kit
+      part_0:
+        type: dropped_part1            # Type of model required
+        pose:
+          xyz: [0.05, 0.15, 0]       # Position required in the kit tray frame
+          rpy: [0, 0, 'pi']        # Orientation required in the kit tray frame
+      part_1:
+        type: dropped_part2
+        pose:
+          xyz: [-0.15, -0.1, 0]
+          rpy: [0, 0, 'pi/2']
+      part_2:
+        type: dropped_part3
+        pose:
+          xyz: [0.1, -0.15, 0]
+          rpy: [0, 0, 0]
+
+# Schedule gripper drops when the specified part enters the specified box in space (world co-ordinates)
+drops:
+  drop_regions:
+    agv1_impeding:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 1.5]
+      destination:                   # Where to drop the part to (world co-ordinates)
+        xyz: [0.15, 3.2, 0.8]
+        rpy: [0, 0, -0.1]
+      part_type_to_drop: dropped_part1
+    agv2_unreachable:
+      min:
+        xyz: [0.0, -2.7, 0.6]
+      max:
+        xyz: [0.6, -3.5, 1.5]
+      destination:
+        xyz: [0.65, -3.2, 0.8]
+        rpy: [0, 0, -0.1]
+      part_type_to_drop: dropped_part2
+    bin7_reachable:
+      min:
+        xyz: [-0.6, -0.07, 1.0]
+      max:
+        xyz: [0.0, 0.53, 1.5]
+      destination:
+        xyz: [-0.3, 0.4, 0.8]
+        rpy: [0, 0, -0.9]
+      part_type_to_drop: dropped_part3
+
+# Models to be inserted in the bins
+models_over_bins:
+  bin5:
+    models:
+      dropped_part1:
+        xyz_start: [0.23, 0.15, 0.0]
+        xyz_end: [0.23, 0.45, 0.0]
+        rpy: [0, 0, '-pi/1.5']
+        num_models_x: 1
+        num_models_y: 2
+
+  bin6:                              # Name of the bin (bin1-bin8, as named in the environment simulation)
+    models:                          # List of models to insert
+      dropped_part2:                   # Type of model to insert
+        xyz_start: [0.2, 0.2, 0.]  # Origin of the first model to insert
+        xyz_end: [0.5, 0.5, 0.0]   # Origin of the last model to insert
+        rpy: [0, 0, 'pi/2.3']          # Orientation of all models to insert
+        num_models_x: 3              # How many models to insert along the x dimension
+        num_models_y: 1              # How many models to insert along the y dimension
+
+  bin7:
+    models:
+       dropped_part3:
+        xyz_start: [0.075, 0.1, 0.0]
+        xyz_end: [0.525, 0.3, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 4
+        num_models_y: 2

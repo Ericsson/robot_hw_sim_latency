@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<package>
+  <name>latency_plugin_velocity_control</name>
+  <version>0.0.1</version>
+  <description>Latency plugin that sends command to a topic and controls Gazeb with the recieved states</description>
+
+  <maintainer email="pjoejoejoe@gmail.com">József Pető</maintainer>
+
+  <!-- One license tag required, multiple allowed, one license per tag -->
+  <!-- Commonly used license strings: -->
+  <!--   BSD, MIT, Boost Software License, GPLv2, GPLv3, LGPLv2.1, LGPLv3 -->
+  <license>TODO</license>
+
+  <url type="website"></url>
+
+  <author>József Pető</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  
+  <build_depend>roscpp</build_depend>
+  <build_depend>std_msgs</build_depend>
+  <build_depend>sensor_msgs</build_depend>
+  <build_depend>pluginlib</build_depend>
+  <build_depend>robot_hw_sim_latency</build_depend>
+  <build_depend>control_toolbox</build_depend>
+
+  <run_depend>roscpp</run_depend>
+  <run_depend>std_msgs</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>pluginlib</run_depend>
+  <run_depend>robot_hw_sim_latency</run_depend>
+
+  <export>
+    <robot_hw_sim_latency plugin="${prefix}/sim_latency_plugins.xml"/>
+  </export>
+  <!-- The export tag contains other, unspecified, tags -->
+</package>

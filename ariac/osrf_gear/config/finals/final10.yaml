@@ -1,0 +1,111 @@
+# In this scenario:
+# - there is one order consisting of two parts that are in both the bins and the
+#   belt.
+# - parts will drop over the bins.
+# - re-using dropped parts over the bins means parts from the belt don't need to be used.
+
+# Competition configuration options
+options:
+  insert_models_over_bins: true     # Whether or not to insert the models that are specified in models_over_bins
+  spawn_extra_models: false          # Whether or not to spawn the models that are specified in models_to_spawn
+  fill_demo_tray: false             # If true, AGV1's tray will have parts from the first order spawned
+                                    # directly ontop of it once the competition starts (for testing purposes)
+  gazebo_state_logging: true        # Whether or not to generate a gazebo state log
+  model_type_aliases:               # Aliases for model types which can be used in the configuration file
+    dropped_part1: piston_rod_part
+    order1_part1: gear_part
+    order1_part2: disk_part
+
+time_limit: 500                      # Maximum time allowed for the trial once started, in seconds
+
+# Orders to announce during the game
+orders:
+  order_0:
+    announcement_condition: time     # Announce the order base on elapsed time
+    announcement_condition_value: 0  # Time in seconds to wait before announcing the order
+    kit_count: 1                     # How many of the same kit are in the order
+    parts:                           # List of parts required to be in the kit
+      part_0:
+        type: dropped_part1            # Type of model required
+        pose:
+          xyz: [0.2, -0.15, 0]       # Position required in the kit tray frame
+          rpy: [0, 0, 'pi/6']        # Orientation required in the kit tray frame
+      part_1:
+        type: order1_part1
+        pose:
+          xyz: [0, 0, 0]
+          rpy: [0, 0, 'pi/2']
+      part_2:
+        type: order1_part2
+        pose:
+          xyz: [0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_3:
+        type: order1_part1
+        pose:
+          xyz: [-0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_4:
+        type: dropped_part1            # Type of model required
+        pose:
+          xyz: [-0.2, -0.15, 0]       # Position required in the kit tray frame
+          rpy: [0, 0, 0]        # Orientation required in the kit tray frame
+
+# Schedule gripper drops when the specified part enters the specified box in space (world co-ordinates)
+drops:
+  drop_regions:
+    agv1_impeding:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 1.5]
+      destination:                   # Where to drop the part to (world co-ordinates)
+        xyz: [0.15, 3.2, 0.8]
+        rpy: [0, 0, -0.1]
+      part_type_to_drop: dropped_part1
+    agv2_impeding:
+      min:
+        xyz: [0.0, -2.7, 0.6]
+      max:
+        xyz: [0.6, -3.5, 1.5]
+      destination:
+        xyz: [0.15, -3.2, 0.8]
+        rpy: [0, 0, -0.1]
+      part_type_to_drop: dropped_part1
+
+# Models to be inserted in the bins
+models_over_bins:
+  bin5:
+    models:
+      dropped_part1:
+        xyz_start: [0.33, 0.51, 0.0]
+        xyz_end: [0.33, 0.51, 0.0]
+        rpy: [0, 0, 'pi/1.5']
+        num_models_x: 1
+        num_models_y: 1
+
+  bin6:                              # Name of the bin (bin1-bin8, as named in the environment simulation)
+    models:                          # List of models to insert
+      order1_part1:                   # Type of model to insert
+        xyz_start: [0.2, 0.2, 0.]  # Origin of the first model to insert
+        xyz_end: [0.5, 0.5, 0.0]   # Origin of the last model to insert
+        rpy: [0, 0, 'pi/8']          # Orientation of all models to insert
+        num_models_x: 3              # How many models to insert along the x dimension
+        num_models_y: 3              # How many models to insert along the y dimension
+
+  bin8:
+    models:
+       order1_part2:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.3, 0.3, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 2
+        num_models_y: 2
+  bin7:
+    models:
+      piston_rod_part:
+        xyz_start: [0.4, 0.2, 0.0]
+        xyz_end: [0.4, 0.2, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 1
+        num_models_y: 1

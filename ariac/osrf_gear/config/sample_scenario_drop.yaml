@@ -1,0 +1,57 @@
+# In this scenario:
+# - the conveyor belt is not used
+# - there is one order consisting of two types of parts, found in the bins
+# - the first part will fall to the ground once over the kit tray
+
+options:
+  insert_models_over_bins: true
+  fill_demo_tray: false
+  model_type_aliases:
+    order_part1: gasket_part
+    order_part2: piston_rod_part
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    parts:
+      part_0:
+        type: order_part1
+        pose:
+          xyz: [0.1, -0.15, 0]
+          rpy: [0, 0, 0]
+      part_1:
+        type: order_part2
+        pose:
+          xyz: [0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+
+drops:
+  drop_regions:
+    drop_region1:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 2.0]
+      destination:
+        xyz: [0.6, 3.1, 1.0]
+      part_type_to_drop: order_part1
+
+models_over_bins:
+  bin7:
+    models:
+      order_part1:
+        xyz_start: [0.15, 0.15, 0.0]
+        xyz_end: [0.45, 0.45, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+  bin8:
+    models:
+       order_part2:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 3
+        num_models_y: 4

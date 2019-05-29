@@ -1,0 +1,68 @@
+<?xml version="1.0" ?>
+<launch>
+
+  <arg name="sim" default="true" />
+  <arg name="gui" default="true" />
+  <arg name="paused" default="false" />
+  <arg name="moveit" default="false" />
+  <arg name="robot_ip" unless="$(arg sim)" />
+  <arg name="rviz" default="false" />
+  <arg name="latency_plugin" default="false" />
+  <arg name="latency" default="0" />
+  <arg name="ns" default="" />
+
+
+  <!-- By default, we do not start a database (it can be large) -->
+  <arg name="db" default="false" />
+
+  <!-- By default, we are not in debug mode -->
+  <arg name="debug" default="false" />
+
+  <!--<rosparam param="/robot_hw_sim_latency/latency_plugin">robot_hw_sim_latency/DefaultSimLatencyPlugin</rosparam>-->
+ <group if="$(arg latency_plugin)">
+  <rosparam param="/robot_hw_sim_latency/latency_plugin">latency_plugin_velocity_publisher/VelocityControlPlugin</rosparam>
+ </group>
+  <rosparam param="controller_joint_names" ns="$(arg ns)">[
+  'shoulder_pan_joint',
+  'shoulder_lift_joint',
+  'elbow_joint',
+  'wrist_1_joint',
+  'wrist_2_joint',
+  'wrist_3_joint']</rosparam>
+
+  <!-- run the "real robot" interface nodes -->
+  <!-- fix empty arg ns borking up group tag -->
+  <group unless="$(arg sim)" ns="$(eval '/' if arg('ns')=='' else arg('ns'))">
+    <remap if="$(arg latency_plugin)" from="ur5_velocity_controller/command" to="/latency_plugin_velocity_control/joint_speeds" />
+    <remap if="$(arg latency_plugin)" from="joint_states" to="/latency_plugin_velocity_control/joint_states" />
+    <include file="$(find ur5_vel_start)/launch/ur5_ros_control.launch" >
+      <arg name="robot_ip" value="$(arg robot_ip)"/> 
+      <arg name="moveit" value="$(arg moveit)"/>
+      <arg name="ns" value="$(arg ns)"/>
+    </include> 
+  </group>
+
+  <!-- run the robot simulator -->
+  <group if="$(arg sim)">
+    <include file="$(find ur5_vel_start)/launch/ur5_gazebo.launch">
+       <arg name="paused" value="$(arg paused)"/>
+       <arg name="gui" value="$(arg gui)"/>
+       <arg name="moveit" value="$(arg moveit)"/>
+    </include>
+  </group>
+
+  <!-- rviz -->
+  <node if="$(arg rviz)" name="rviz" type="rviz" pkg="rviz" output="screen"/>
+
+  <!-- visualize trajectory of ee_link on topic /trajectory 
+  
+  <node name="trajectoryvisualizer" type="hector_trajectory_server" pkg="hector_trajectory_server" output="screen">
+      <param name="target_frame_name " value="world"/>
+      <param name="source_frame_name " value="ee_link"/>
+      <param name="trajectory_update_rate " value="60"/>
+      <param name="trajectory_publish_rate " value="10"/>
+	  <remap from="/trajectory" to="/trajectory" />
+  </node>-->
+  
+
+</launch>

@@ -1,0 +1,3 @@
+options:
+    insert_models_over_bins: true
+    fill_demo_tray: true

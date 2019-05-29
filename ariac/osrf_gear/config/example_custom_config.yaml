@@ -1,0 +1,163 @@
+# Competition configuration options
+options:
+  insert_models_over_bins: true     # Whether or not to insert the models that are specified in models_over_bins
+  spawn_extra_models: true          # Whether or not to spawn the models that are specified in models_to_spawn
+  fill_demo_tray: false             # If true, AGV1's tray will have parts from the first order spawned
+                                    # directly ontop of it once the competition starts (for testing purposes)
+  gazebo_state_logging: true        # Whether or not to generate a gazebo state log
+  belt_population_cycles: 5         # How many of each belt part to spawn on the belt
+  model_type_aliases:               # Aliases for model types which can be used in the configuration file
+    belt_model_type1: gear_part     # Wherever 'belt_model_type1' is used in the configuration file, use 'gear_part'
+    belt_model_type2: piston_rod_part
+    order_part1: piston_rod_part
+    order_part2: gear_part
+    order_part3: pulley_part
+
+time_limit: 600                      # Maximum time allowed for the trial once started, in seconds
+
+# Parts to be spawned on the conveyor belt (will loop belt_population_cycles times)
+belt_parts:
+  belt_model_type1:                  # Type of model to insert
+    4.9:                             # Time in seconds to wait before spawning models
+      pose:
+        xyz: [0.0, 0.0, 0.1]         # Position of the model from the belt origin
+                                     # y = 0 is in the center of the belt; y > 0 is towards the robot
+        rpy: [0, 0, 'pi/2']          # Orientation of the model in the belt frame
+  belt_model_type2:
+    9.9:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 0]
+
+# Orders to announce during the game
+orders:
+  order_0:
+    announcement_condition: time     # Announce the order base on elapsed time
+    announcement_condition_value: 0  # Time in seconds to wait before announcing the order
+    kit_count: 1                     # How many of the same kit are in the order
+    parts:                           # List of parts required to be in the kit
+      part_0:
+        type: order_part1            # Type of model required
+        pose:
+          xyz: [0.1, -0.15, 0]       # Position required in the kit tray frame
+          rpy: [0, 0, 'pi/2']        # Orientation required in the kit tray frame
+      part_1:
+        type: order_part1
+        pose:
+          xyz: [-0.1, -0.15, 0]
+          rpy: [0, 0, 'pi/2']
+      part_2:
+        type: order_part2
+        pose:
+          xyz: [0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_3:
+        type: order_part2
+        pose:
+          xyz: [-0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+  order_1:
+    announcement_condition: wanted_parts # Announce the order when the trays contain parts from this order
+    announcement_condition_value: 2
+    kit_count: 1
+    parts:
+      part_0:
+        type: order_part3
+        pose:
+          xyz: [0.12, -0.2, 0]
+          rpy: ['pi', 0, 0]
+      part_1:
+        type: order_part3
+        pose:
+          xyz: [-0.12, -0.2, 0]
+          rpy: [0, 'pi', 0]
+      part_2:
+        type: order_part1
+        pose:
+          xyz: [0.15, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_3:
+        type: order_part2
+        pose:
+          xyz: [-0.15, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_4:
+        type: order_part2
+        pose:
+          rpy: [0, 'pi', 0]
+
+# Individual parts that will be reported as faulty
+faulty_parts:
+  - piston_rod_part_1                # The piston rod part in the bins with ID 1
+  - piston_rod_part_3
+  - gasket_part_clone_0              # The gasket part on the belt with ID 0
+
+# Schedule gripper drops when the specified part enters the specified box in space (world co-ordinates)
+drops:
+  drop_regions:
+    agv1_impeding:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 1.5]
+      destination:                   # Where to drop the part to (world co-ordinates)
+        xyz: [0.4, 3.1, 0.8]
+        rpy: [0, 0, 0.2]
+      part_type_to_drop: gear_part
+    agv2_impeding:
+      min:
+        xyz: [0.0, -2.7, 0.6]
+      max:
+        xyz: [0.6, -3.5, 1.5]
+      destination:
+        xyz: [0.4, -3.1, 0.8]
+        rpy: [0, 0, 0.2]
+      part_type_to_drop: gear_part
+    bin7_reachable:
+      min:
+        xyz: [-0.35, 0.06, 0.75]
+      max:
+        xyz: [-0.1, 0.20, 0.92]
+      destination:
+        xyz: [-0.07, 0.13, 0.73]
+        rpy: [0, 0, 0.5]
+      part_type_to_drop: piston_rod_part
+
+# Models to be inserted in the bins
+models_over_bins:
+  bin8:                              # Name of the bin (bin1-bin8, as named in the environment simulation)
+    models:                          # List of models to insert
+      pulley_part:                   # Type of model to insert
+        xyz_start: [0.15, 0.15, 0.]  # Origin of the first model to insert
+        xyz_end: [0.45, 0.45, 0.0]   # Origin of the last model to insert
+        rpy: [0, 0, 'pi/4']          # Orientation of all models to insert
+        num_models_x: 2              # How many models to insert along the x dimension
+        num_models_y: 2              # How many models to insert along the y dimension
+
+  bin5:
+    models:
+      piston_rod_part:
+        xyz_start: [0.2, 0.2, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+  bin6:
+    models:
+       gear_part:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 4
+        num_models_y: 4
+
+# Models to be spawned in particular reference frames
+#models_to_spawn:
+#  reference_frame_name:              # Name of the reference frame (e.g. workcell::bin8::link)
+#    models:                          # List of models to spawn
+#      model_name:                    # Name of the model
+#        type: piston_rod_part        # Type of model (note that only local models are supported)
+#        pose:
+#          xyz: [0.1, 0.1, 0.725]     # Co-ordinates of the model origin in the specified reference frame
+#          rpy: [0, 0, '-pi/2']       # Roll, pitch, yaw of the model in the specified reference frame

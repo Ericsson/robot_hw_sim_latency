@@ -1,0 +1,10 @@
+<library path="lib/liblatency_plugin_velocity_control">
+
+  <class
+    name="latency_plugin_velocity_control/VelocityControlPlugin"
+    type="latency_plugin_velocity_control::VelocityControlPlugin"
+    base_class_type="robot_hw_sim_latency::SimLatencyPlugin">
+    <description>
+    </description>
+  </class>
+</library>

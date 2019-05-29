@@ -1,0 +1,17 @@
+1. 
+printf 'movej([3.14,-1.13,1.51,3.77,-1.51,0.0])\nend' | nc 172.31.32.232 30002 &>/dev/null
+2. 
+export SUDO_PASSWORD=q
+3.
+cd ariac2017_latency/
+4.
+source install/setup.bash
+5.
+roslaunch digital_twin_demo setup.launch robot_ip:=172.31.32.232
+6.
+Open 127.0.0.1/demo.html
+
+
+IF IT DOESNT START
+sudo tc qdisc del dev enp5s0 root
+

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <link rel="stylesheet" href="control.css">
+
+  <script src="/demo.js"></script>
+    
+  </script>
+</head>
+
+<body onload="onLoad()">
+  <div class="overlay" id="overlay">
+    <div class="overlay-content">
+    </div>
+  </div>
+  <div id="full-size">
+    <div class="table">
+      <div class="row" id="upper">
+        <div class="cell cell-low">
+          <span>Low priority order</span>
+          <div class="spinner">
+            <img src="pics/pistons.png">
+            <label for="low-pistons">Pistons</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="low-pistons" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <img src="pics/gears.png">
+            <label for="low-gears">Gears</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="low-gears" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <img src="pics/pulleys.png">
+            <label for="low-pulleys">Pulleys</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="low-pulleys" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <img src="pics/discs.png">
+            <label for="low-discs">Discs</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="low-discs" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+        </div>
+        <div class="cell cell-high">
+          <span>High priority order</span>
+          <div class="spinner">
+            <img src="pics/pistons.png">
+            <label for="high-pistons">Pistons</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="high-pistons" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <img src="pics/gears.png">
+            <label for="high-gears">Gears</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="high-gears" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <img src="pics/pulleys.png">
+            <label for="high-pulleys">Pulleys</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="high-pulleys" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <img src="pics/discs.png">
+            <label for="high-discs">Discs</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="high-discs" type="number" value="0" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+          <div class="spinner">
+            <label for="high-time">Time when issued</label>
+            <button class="spinnerbutton minus" type="button" onclick="this.nextElementSibling.stepDown()"></button>
+            <input id="high-time" type="number" value="5" min="0" max="4" readonly/>
+            <button class="spinnerbutton plus" type="button" onclick="this.previousElementSibling.stepUp()"></button>
+          </div>
+        </div>
+        <div class="cell cell-scenarios">
+          <span>Scenario</span>
+          <div class="radiobutton">
+            <label>
+              <input type="radio" name="scenarios" value="scenario1" id="scenario1" checked/>
+              <img src="pics/s1.png">
+              Scenario without pulley part. (Real Time Factor friendly)
+            </label>
+          </div>
+          <div class="radiobutton">
+            <label>
+              <input type="radio" name="scenarios" value="scenario2" id="scenario2" />
+              <img src="pics/s2.png">
+              Scenario with all part types. 
+            </label>
+          </div>
+          <div class="radiobutton">
+            <label>
+              <input type="radio" name="scenarios" value="scenario3" id="scenario3" />
+              <img src="pics/s3.png">
+              Scenario with gear parts coming on the conveyor belt.
+            </label>
+          </div>
+        </div>
+      </div>
+      <div class="row" id="lower">
+        <div class="cell cell-checkboxes">
+          <div>
+            <input type="checkbox" class="styled-checkbox" id="failures">
+            <label for="failures">Failures</label>
+          </div>
+          <div>
+            <input type="checkbox" class="styled-checkbox" id="qoc">
+            <label for="qoc">QoC</label>
+          </div>
+        </div>
+        <div class="cell cell-latency">
+          <label for="latency">Latency</label>
+          <input type="range" id="latency" name="latency" class="slider" min="0" max="30" value="0" oninput="onLatencyChange(event)">
+          <div>
+            <span id="latencytext">0 ms</span>
+          </div>
+          <div class=latencyimgdiv>
+            <img src="pics/5G_urllc_2.png" id='latencyimg'/>
+          </div>
+        </div>
+        <div class="cell cell-start">
+          <button class="button" type="button" onclick="onStart()">START</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>

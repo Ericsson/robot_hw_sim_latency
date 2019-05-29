@@ -1,0 +1,10 @@
+<launch>
+  <node name="ariac_sim" pkg="osrf_gear" type="gear.py"
+        args="-f
+              $(find test_ariac)/test/scoring_base_order.yaml
+              $(find test_ariac)/test/scoring_faulty_parts.yaml
+              $(find osrf_gear)/config/sample_user_config.yaml
+              --development-mode --verbose --no-gui"/>
+  <test pkg="test_ariac" type="test_tf_frames.py" test-name="ariac_tf_frames"
+        time-limit="60.0"/>
+</launch>

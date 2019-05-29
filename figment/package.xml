@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package format="2">
+<name>figment_ariac</name>
+<version>0.1.0</version>
+<description>FIGMENT team Ariac Competition code</description>
+
+<maintainer email="geza.szabo@ericsson.com">Geza Szabo</maintainer>
+<maintainer email="marcos.machado@gprt.ufpe.br">Marcos Machado</maintainer>
+<maintainer email="rafael.roque@palmares.ifpe.edu.br">Rafael Aschoff</maintainer>
+
+<license>Apache 2.0</license>
+
+<buildtool_depend>catkin</buildtool_depend>
+
+<depend>osrf_gear</depend>
+<depend>roscpp</depend>
+<depend>sensor_msgs</depend>
+<depend>std_srvs</depend>
+<depend>trajectory_msgs</depend>
+
+
+</package>

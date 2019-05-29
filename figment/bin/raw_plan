@@ -1,0 +1,7 @@
+#! /usr/bin/env python
+
+import figment_ariac.raw_plan
+
+
+if __name__ == '__main__':
+	figment_ariac.raw_plan.main()

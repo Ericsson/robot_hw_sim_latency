@@ -1,0 +1,10 @@
+<library path="lib/liblatency_plugin_velocity_publisher">
+
+  <class
+    name="latency_plugin_velocity_publisher/VelocityPublisherPlugin"
+    type="latency_plugin_velocity_publisher::VelocityPublisherPlugin"
+    base_class_type="robot_hw_sim_latency::SimLatencyPlugin">
+    <description>
+    </description>
+  </class>
+</library>

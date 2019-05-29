@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<launch>
+  
+<!--
+  HTTPS / Secure web socket is not working
+-->
+
+  <arg name="certfile" default="$(find digital_twin_demo)/config/localhost.crt" />
+  <arg name="keyfile" default="$(find digital_twin_demo)/config/localhost.key" />
+
+  <arg name="robot_ip" default="172.31.32.232" />
+  
+  
+  <node name="httpsserver" type="httpsserver.py" pkg="digital_twin_demo" output="screen" args="$(arg certfile) $(arg keyfile) $(find digital_twin_demo)/web" required="true"/>
+  <node name="websocketserver" type="websocketserver.py" pkg="digital_twin_demo" output="screen" args="$(arg robot_ip)" required="true"/>
+
+</launch>

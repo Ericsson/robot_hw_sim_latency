@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<launch>
+
+  <!-- GDB functionality -->
+  <arg name="debug" default="false" />
+  <arg unless="$(arg debug)" name="launch_prefix" value="" />
+  <arg     if="$(arg debug)" name="launch_prefix" value="gdb --ex run --args" />
+
+  <arg name="robot_ip"/>
+  <arg name="moveit" default="false"/>
+  <arg name="limited" default="false"/>
+  <arg name="min_payload"  default="0.0"/>
+  <arg name="max_payload"  default="3.0"/>
+  <arg name="ns" default="" />  
+  
+  <arg name="max_velocity" default="10"/> <!-- [rad/s] -->
+  <arg name="max_vel_change" default="25.0"/> <!-- orig 15 -->
+  <!-- robot model -->
+  <param name="robot_description"  command="$(find xacro)/xacro --inorder '$(find ur5_vel_start)/urdf/ur5_robot.urdf.xacro' ns:=$(arg ns)" />
+
+  <!-- Load hardware interface -->
+  <node name="ur_hardware_interface" pkg="ur_modern_driver" type="ur_driver" output="screen" launch-prefix="$(arg launch_prefix)">
+    <param name="robot_ip_address" type="str" value="$(arg robot_ip)"/>
+    <param name="min_payload" type="double" value="$(arg min_payload)"/>
+    <param name="max_payload" type="double" value="$(arg max_payload)"/>
+    <param name="max_velocity" type="double" value="$(arg max_velocity)"/>
+    <param name="max_vel_change" type="double" value="$(arg max_vel_change)"/>
+    <param name="use_ros_control" type="bool" value="True"/>
+    <param name="prefix" value="$(arg ns)" />
+  </node>
+
+   <!--Load custom controller settings 
+  <param if="$(eval ns != '')" name="/tf_prefix" value="$(arg ns)" />-->
+  <rosparam file="$(find ur5_vel_start)/config/ur5_controllers.yaml.template" command="load" subst_value="true"/>
+
+  <!-- spawn controller manager -->
+  <node unless="$(arg moveit)" name="ur5_velocity_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
+	args="joint_state_controller 	force_torque_sensor_controller ur5_velocity_controller"/>
+  <node if="$(arg moveit)" name="ur5_velocity_controller_spawner" pkg="controller_manager" type="spawner" output="screen" 
+	args="joint_state_controller 	force_torque_sensor_controller ur5_velocity_controller_moveit">
+	 <remap from="/robot_description" to="$(arg ns)robot_description" />
+  </node>
+
+  <include if="$(arg moveit)" file="$(find ur5_moveit_vel_control_config)/launch/ur5_moveit_planning_execution.launch"/>
+
+  <!-- Convert joint states to /tf tranforms -->
+  <node name="robot_state_publisher" pkg="robot_state_publisher" type="robot_state_publisher">
+	  <!--<remap from="robot_description" to="$(arg ns)robot_description" />-->
+  </node>
+
+</launch>
+

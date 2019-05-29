@@ -1,0 +1,42 @@
+arm:
+ type: ur10
+sensors:
+
+ logical_camera_bin_5_6:
+   type: logical_camera
+   pose:
+     xyz: [-0.36, -1.15283, 1.474698]
+     rpy: ['-pi', 'pi/2', 'pi']
+
+ logical_camera_bin_6_7:
+   type: logical_camera
+   pose:
+     xyz: [-0.36, -0.18, 1.474698]
+     rpy: ['-pi', 'pi/2', 'pi']
+
+ logical_camera_bin_7_8:
+   type: logical_camera
+   pose:
+     xyz: [-0.36, 0.78, 1.474698]
+     rpy: ['-pi', 'pi/2', 'pi']
+
+ logical_camera_agv_1:
+   type: logical_camera
+   pose:
+     xyz: [0.3, 3.15, 1.5]
+     rpy: [0, 'pi/2', 0]
+ logical_camera_agv_2:
+   type: logical_camera
+   pose:
+     xyz: [0.3, -3.15, 1.5]
+     rpy: [0, 'pi/2', 0]
+ logical_camera_belt_1:
+   type: logical_camera
+   pose:
+     xyz: [1.217532, 2.03, 1.648080]
+     rpy: [0, 'pi/2', 0]
+ # laser_profiler_1:
+ #   type: laser_profiler
+ #   pose:
+ #     xyz: [1.21, 4, 1.64]
+ #     rpy: ['-pi', 'pi/2', 'pi/2']

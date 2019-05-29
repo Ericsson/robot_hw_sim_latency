@@ -1,0 +1,47 @@
+# Competition configuration options
+
+drops:
+  drop_regions:
+    unreachable:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 2.0]
+      destination:
+        xyz: [0.6, 3.1, 1.0]
+      part_type_to_drop: order_part1
+    reachable:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 2.0]
+      destination:
+        xyz: [0.9, 2.8, 0.9]
+        rpy: [0, 0, 0.5]
+      part_type_to_drop: order_part2
+    impeding:
+      min:
+        xyz: [0.0, 2.7, 0.6]
+      max:
+        xyz: [0.6, 3.5, 2.0]
+      destination:
+        xyz: [0.2, 3.0, 0.9]
+        rpy: [0, 0, 0.5]
+      part_type_to_drop: order_part3
+
+options:
+  insert_models_over_bins: true
+  model_type_aliases:
+    order_part1: part4
+    order_part3: piston_rod_part
+    order_part2: part4
+
+models_over_bins:
+  bin7:
+    models:
+      piston_rod_part:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 3
+        num_models_y: 4

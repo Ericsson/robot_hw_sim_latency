@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="state_log_path" default="$(env HOME)/.ariac/log/gazebo/state.log" />
+
+  <!-- start gazebo with 'verbose' by default because otherwise exceptions aren't printed to screen -->
+  <arg name="extra_gazebo_args" default="--verbose" />
+
+  <node name="gazebo" pkg="gazebo_ros" type="gazebo"
+    args="-p $(arg state_log_path) --pause $(arg extra_gazebo_args)" required="true" />
+
+</launch>

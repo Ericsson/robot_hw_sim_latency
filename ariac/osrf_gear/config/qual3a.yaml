@@ -1,0 +1,118 @@
+# In this scenario:
+# - The conveyor belt is not used.
+# - There are two orders of one tray each:
+#   - The second will interrupt the first at an inconvenient time.
+#   - The second has no time limit, but should be completed as fast as possible.
+#   - After the second order is complete, the first order is to be resumed.
+# - Faulty parts should not be used to build the kits.
+
+options:
+  insert_models_over_bins: true
+  fill_demo_tray: false
+  gazebo_state_logging: true
+  model_type_aliases:
+    order_part1: piston_rod_part
+    order_part2: gear_part
+    order_part3: gasket_part
+    order_part4: disk_part
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    parts:
+      part_0:
+        type: order_part1
+        pose:
+          xyz: [0.1, -0.2, 0]
+          rpy: [0, 0, 0]
+      part_1:
+        type: order_part1
+        pose:
+          xyz: [-0.1, -0.2, 0]
+          rpy: [0, 0, 0]
+      part_2:
+        type: order_part2
+        pose:
+          xyz: [0.15, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_3:
+        type: order_part2
+        pose:
+          xyz: [-0.15, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_4:
+        type: order_part2
+        pose:
+          xyz: [0.0, 0.15, 0]
+          rpy: [0, 0, 0]
+  order_1:
+    announcement_condition: unwanted_parts
+    announcement_condition_value: 2
+    kit_count: 1
+    parts:
+      part_0:
+        type: order_part3
+        pose:
+          xyz: [0.1, -0.15, 0]
+          rpy: [0, 0, 'pi/2']
+      part_1:
+        type: order_part3
+        pose:
+          xyz: [-0.1, -0.15, 0]
+          rpy: [0, 0, 'pi/2']
+      part_2:
+        type: order_part4
+        pose:
+          xyz: [0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_3:
+        type: order_part4
+        pose:
+          xyz: [-0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+
+models_over_bins:
+  bin7:
+    models:
+      gasket_part:
+        xyz_start: [0.2, 0.2, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+  bin8:
+    models:
+      disk_part:
+        xyz_start: [0.2, 0.2, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+  bin6:
+    models:
+      piston_rod_part:
+        xyz_start: [0.2, 0.2, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+  bin5:
+    models:
+       gear_part:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 4
+        num_models_y: 4
+
+faulty_parts:
+  - piston_rod_part_1
+  - piston_rod_part_3
+  - gasket_part_4
+  - gasket_part_3
+
+time_limit: -1
