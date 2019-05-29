@@ -1,8 +1,11 @@
 #pragma once
 
 #include <robot_hw_sim_latency/sim_latency_plugin.h>
+#include <std_msgs/String.h>
 #include <ros/ros.h>
+#include <ros/spinner.h>
 #include <deque>
+#include <bitset>
 #include <tuple>
 
 namespace latency_plugin_simple_queue
@@ -17,6 +20,7 @@ struct RobotData
   std::vector<double> position_command;
   std::vector<double> velocity_command;
   std::vector<double> effort_command;
+  
   RobotData(int n_dof, ros::Time time_, ros::Duration period_, std::vector<double> position_,
             std::vector<double> velocity_, std::vector<double> effort_, std::vector<double> position_command_,
             std::vector<double> velocity_command_, std::vector<double> effort_command_)
@@ -55,6 +59,13 @@ struct RobotData
   }
 };
 
+enum LatencyChangeState{
+  CommandQueueSetToLow,
+  CommandQueueSetToHigh,
+  StateQueueSetToLow,
+  StateQueueSetToHigh,
+};
+
 class SimpleQueueLatencyPlugin : public robot_hw_sim_latency::SimLatencyPlugin
 {
 public:
@@ -71,11 +82,21 @@ public:
                 std::vector<double>& velocity_command, std::vector<double>& effort_command);
 
 private:
+  void queue_length_callback(const std_msgs::String::ConstPtr&);
   std::deque<RobotData> queue_state;
   std::deque<RobotData> queue_command;
 
   int n_dof;
   int queue_length;
+  int low_latency_queue_length;
   bool no_delay;
+  bool low_latency;
+  bool prev_low_latency;
+  ros::NodeHandle nh;
+  ros::Publisher pub;
+  ros::Subscriber sub;
+  
+  std::bitset<4> latency_change_state;
+  
 };
 }
