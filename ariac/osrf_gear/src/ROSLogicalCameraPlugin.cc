@@ -122,7 +122,7 @@ void ROSLogicalCameraPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
 
   this->model = _parent;
   this->node = transport::NodePtr(new transport::Node());
-  this->node->Init(this->model->GetWorld()->GetName());
+  this->node->Init(this->model->GetWorld()->Name());
   this->rosnode = new ros::NodeHandle(this->robotNamespace);
 
   this->FindLogicalCamera();
@@ -131,9 +131,9 @@ void ROSLogicalCameraPlugin::Load(physics::ModelPtr _parent, sdf::ElementPtr _sd
     gzerr << "No logical camera found on any link\n";
     return;
   }
-  math::Vector3 kitTrayPosition = math::Vector3(0, 0.15, 0.75);
-  math::Quaternion kitTrayOrientation = math::Quaternion(1, 0, 0, 0);
-  this->kitTrayToAgv = math::Pose(kitTrayPosition, kitTrayOrientation);
+  ignition::math::Vector3d kitTrayPosition = ignition::math::Vector3d(0, 0.15, 0.75);
+  ignition::math::Quaternion<double> kitTrayOrientation = ignition::math::Quaternion<double>(1, 0, 0, 0);
+  this->kitTrayToAgv = ignition::math::Pose3d(kitTrayPosition, kitTrayOrientation);
 
   // Handle noise model settings.
   if (_sdf->HasElement("position_noise"))
@@ -192,22 +192,22 @@ void ROSLogicalCameraPlugin::FindLogicalCamera()
 void ROSLogicalCameraPlugin::OnImage(ConstLogicalCameraImagePtr &_msg)
 {
   osrf_gear::LogicalCameraImage imageMsg;
-  math::Vector3 cameraPosition = math::Vector3(msgs::ConvertIgn(_msg->pose().position()));
-  math::Quaternion cameraOrientation = math::Quaternion(
+  ignition::math::Vector3d cameraPosition = ignition::math::Vector3d(msgs::ConvertIgn(_msg->pose().position()));
+  ignition::math::Quaternion<double> cameraOrientation = ignition::math::Quaternion<double>(
     msgs::ConvertIgn(_msg->pose().orientation()));
-  math::Pose cameraPose = math::Pose(cameraPosition, cameraOrientation);
+  ignition::math::Pose3d cameraPose = ignition::math::Pose3d(cameraPosition, cameraOrientation);
   this->PublishTF(cameraPose, "world", this->name + "_frame");
 
-  imageMsg.pose.position.x = cameraPosition.x;
-  imageMsg.pose.position.y = cameraPosition.y;
-  imageMsg.pose.position.z = cameraPosition.z;
-  imageMsg.pose.orientation.x = cameraOrientation.x;
-  imageMsg.pose.orientation.y = cameraOrientation.y;
-  imageMsg.pose.orientation.z = cameraOrientation.z;
-  imageMsg.pose.orientation.w = cameraOrientation.w;
+  imageMsg.pose.position.x = cameraPosition.X();
+  imageMsg.pose.position.y = cameraPosition.Y();
+  imageMsg.pose.position.z = cameraPosition.Z();
+  imageMsg.pose.orientation.x = cameraOrientation.X();
+  imageMsg.pose.orientation.y = cameraOrientation.Y();
+  imageMsg.pose.orientation.z = cameraOrientation.Z();
+  imageMsg.pose.orientation.w = cameraOrientation.W();
 
   std::ostringstream logStream;
-  math::Pose modelPose;
+  ignition::math::Pose3d modelPose;
   for (int i = 0; i < _msg->model_size(); ++i)
   {
     std::string modelName = _msg->model(i).name();
@@ -220,11 +220,11 @@ void ROSLogicalCameraPlugin::OnImage(ConstLogicalCameraImagePtr &_msg)
     else
     {
       logStream << "Publishing model: " << modelName << " of type: " << modelType << std::endl;
-      math::Vector3 modelPosition = math::Vector3(
+      ignition::math::Vector3d modelPosition = ignition::math::Vector3d(
         msgs::ConvertIgn(_msg->model(i).pose().position()));
-      math::Quaternion modelOrientation = math::Quaternion(
+      ignition::math::Quaternion<double> modelOrientation = ignition::math::Quaternion<double>(
         msgs::ConvertIgn(_msg->model(i).pose().orientation()));
-      modelPose = math::Pose(modelPosition, modelOrientation);
+      modelPose = ignition::math::Pose3d(modelPosition, modelOrientation);
 
       std::string modelFrameId = this->modelFramePrefix + ariac::TrimNamespace(modelName) + "_frame";
 
@@ -233,7 +233,7 @@ void ROSLogicalCameraPlugin::OnImage(ConstLogicalCameraImagePtr &_msg)
       {
         // If AGVs are detected, also publish the pose to the respective kit tray.
         // Add noise to the kit tray pose, not the AGV base (it is too much noise by the time the tray pose is extrapolated)
-        auto noisyKitTrayPose = math::Pose(this->kitTrayToAgv);
+        auto noisyKitTrayPose = ignition::math::Pose3d(this->kitTrayToAgv);
         this->AddNoise(noisyKitTrayPose);
         if (modelType == "agv1")
         {
@@ -254,7 +254,7 @@ void ROSLogicalCameraPlugin::OnImage(ConstLogicalCameraImagePtr &_msg)
     }
 
     // Check any children models
-    auto modelPtr = this->world->GetModel(modelName);
+    auto modelPtr = this->world->ModelByName(modelName);
     auto nestedModels = modelPtr->NestedModels();
     for (auto nestedModel : nestedModels)
     {
@@ -267,7 +267,7 @@ void ROSLogicalCameraPlugin::OnImage(ConstLogicalCameraImagePtr &_msg)
       }
       logStream << "Publishing model: " << modelName << " of type: " << modelType  << std::endl;
       // Convert the world pose of the model into the camera frame
-      modelPose = (nestedModel->GetWorldPose()) - cameraPose;
+      modelPose = (nestedModel->WorldPose()) - cameraPose;
       this->AddNoise(modelPose);
       this->AddModelToMsg(modelType, modelPose, imageMsg);
       // Do not publish TF information for nested models (kit_tray).
@@ -300,17 +300,17 @@ bool ROSLogicalCameraPlugin::ModelToPublish(
   return publishModel;
 }
 
-void ROSLogicalCameraPlugin::AddNoise(math::Pose & pose)
+void ROSLogicalCameraPlugin::AddNoise(ignition::math::Pose3d & pose)
 {
   if (this->noiseModels.find("POSITION_NOISE") != this->noiseModels.end())
   {
     // Apply additive noise to the model position
-    pose.pos.x =
-      this->noiseModels["POSITION_NOISE"]->Apply(pose.pos.x);
-    pose.pos.y =
-      this->noiseModels["POSITION_NOISE"]->Apply(pose.pos.y);
-    pose.pos.z =
-      this->noiseModels["POSITION_NOISE"]->Apply(pose.pos.z);
+    pose.Pos().X() =
+      this->noiseModels["POSITION_NOISE"]->Apply(pose.Pos().X());
+    pose.Pos().Y() =
+      this->noiseModels["POSITION_NOISE"]->Apply(pose.Pos().Y());
+    pose.Pos().Z() =
+      this->noiseModels["POSITION_NOISE"]->Apply(pose.Pos().Z());
   }
 
   if (this->noiseModels.find("ORIENTATION_NOISE") != this->noiseModels.end())
@@ -319,35 +319,35 @@ void ROSLogicalCameraPlugin::AddNoise(math::Pose & pose)
     double r = this->noiseModels["ORIENTATION_NOISE"]->Apply(0.0);
     double p = this->noiseModels["ORIENTATION_NOISE"]->Apply(0.0);
     double y = this->noiseModels["ORIENTATION_NOISE"]->Apply(0.0);
-    math::Quaternion pert = math::Quaternion(r, p, y);
-    pose.rot *= pert;
+    ignition::math::Quaternion<double> pert = ignition::math::Quaternion<double>(r, p, y);
+    pose.Rot() *= pert;
   }
 }
 
 void ROSLogicalCameraPlugin::AddModelToMsg(
-  const std::string & modelType, const math::Pose & modelPose,
+  const std::string & modelType, const ignition::math::Pose3d & modelPose,
   osrf_gear::LogicalCameraImage & imageMsg)
 {
   osrf_gear::Model modelMsg;
-  modelMsg.pose.position.x = modelPose.pos.x;
-  modelMsg.pose.position.y = modelPose.pos.y;
-  modelMsg.pose.position.z = modelPose.pos.z;
+  modelMsg.pose.position.x = modelPose.Pos().X();
+  modelMsg.pose.position.y = modelPose.Pos().Y();
+  modelMsg.pose.position.y = modelPose.Pos().Z();
 
-  modelMsg.pose.orientation.x = modelPose.rot.x;
-  modelMsg.pose.orientation.y = modelPose.rot.y;
-  modelMsg.pose.orientation.z = modelPose.rot.z;
-  modelMsg.pose.orientation.w = modelPose.rot.w;
+  modelMsg.pose.orientation.x = modelPose.Rot().X();
+  modelMsg.pose.orientation.y = modelPose.Rot().Y();
+  modelMsg.pose.orientation.z = modelPose.Rot().Z();
+  modelMsg.pose.orientation.w = modelPose.Rot().W();
   modelMsg.type = modelType;
   imageMsg.models.push_back(modelMsg);
 }
 
 void ROSLogicalCameraPlugin::PublishTF(
-  const math::Pose & pose, const std::string & parentFrame, const std::string & frame)
+  const ignition::math::Pose3d & pose, const std::string & parentFrame, const std::string & frame)
 {
   ros::Time currentTime = ros::Time::now();
 
-  tf::Quaternion qt(pose.rot.x, pose.rot.y, pose.rot.z, pose.rot.w);
-  tf::Vector3 vt(pose.pos.x, pose.pos.y, pose.pos.z);
+  tf::Quaternion qt(pose.Rot().X(), pose.Rot().Y(), pose.Rot().Z(), pose.Rot().W());
+  tf::Vector3 vt(pose.Pos().X(), pose.Pos().Y(), pose.Pos().Z());
 
   tf::Transform transform (qt, vt);
   transformBroadcaster->sendTransform(tf::StampedTransform(transform, currentTime, parentFrame, frame));

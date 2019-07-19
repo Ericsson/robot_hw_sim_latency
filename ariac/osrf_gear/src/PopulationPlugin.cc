@@ -23,7 +23,7 @@
 #include <gazebo/common/Assert.hh>
 #include <gazebo/common/Console.hh>
 #include <gazebo/common/Events.hh>
-#include <gazebo/math/Pose.hh>
+#include <ignition/math/Pose3.hh>
 #include <gazebo/msgs/gz_string.pb.h>
 #include <gazebo/physics/Link.hh>
 #include <gazebo/physics/Model.hh>
@@ -78,7 +78,7 @@ namespace gazebo
               public: std::string type;
 
               /// \brief Pose in which the object should be placed.
-              public: math::Pose pose;
+              public: ignition::math::Pose3d pose;
             };
 
     /// \brief Collection of objects to be spawned.
@@ -172,7 +172,7 @@ void PopulationPlugin::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
   if (_sdf->HasElement("frame"))
   {
     std::string frameName = _sdf->Get<std::string>("frame");
-    this->dataPtr->frame = this->dataPtr->world->GetEntity(frameName);
+    this->dataPtr->frame = this->dataPtr->world->EntityByName(frameName);
     if (!this->dataPtr->frame) {
       gzthrow(std::string("The frame '") + frameName + "' does not exist");
     }
@@ -220,11 +220,11 @@ void PopulationPlugin::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
     std::string type = typeElement->Get<std::string>();
 
     // Parse the object pose (optional).
-    math::Pose pose;
+    ignition::math::Pose3d pose;
     if (objectElem->HasElement("pose"))
     {
       sdf::ElementPtr poseElement = objectElem->GetElement("pose");
-      pose = poseElement->Get<math::Pose>();
+      pose = poseElement->Get<ignition::math::Pose3d>();
     }
 
     // Add the object to the collection.
@@ -252,7 +252,7 @@ void PopulationPlugin::Load(physics::WorldPtr _world, sdf::ElementPtr _sdf)
   else
     this->Restart();
 
-  this->dataPtr->lastUpdateTime = this->dataPtr->world->GetSimTime();
+  this->dataPtr->lastUpdateTime = this->dataPtr->world->SimTime();
 
   // Listen on the activation topic, if present. This topic is used for
   // manual activation.
@@ -276,7 +276,7 @@ void PopulationPlugin::Pause()
 
   this->dataPtr->enabled = false;
   this->dataPtr->elapsedWhenPaused =
-    this->dataPtr->world->GetSimTime() - this->dataPtr->startTime;
+    this->dataPtr->world->SimTime() - this->dataPtr->startTime;
 
   gzmsg << "Object population paused" << std::endl;
 }
@@ -288,7 +288,7 @@ void PopulationPlugin::Resume()
     return;
 
   this->dataPtr->enabled = true;
-  this->dataPtr->startTime = this->dataPtr->world->GetSimTime() -
+  this->dataPtr->startTime = this->dataPtr->world->SimTime() -
     this->dataPtr->elapsedWhenPaused;
 
    gzmsg << "Object population resumed" << std::endl;
@@ -298,7 +298,7 @@ void PopulationPlugin::Resume()
 void PopulationPlugin::Restart()
 {
   this->dataPtr->enabled = true;
-  this->dataPtr->startTime = this->dataPtr->world->GetSimTime();
+  this->dataPtr->startTime = this->dataPtr->world->SimTime();
   this->dataPtr->objects = this->dataPtr->initialObjects;
 
    gzmsg << "Object population restarted" << std::endl;
@@ -328,15 +328,15 @@ void PopulationPlugin::OnUpdate()
   }
 
   // Check whether spawn a new object from the list.
-  auto elapsed = this->dataPtr->world->GetSimTime() - this->dataPtr->startTime;
+  auto elapsed = this->dataPtr->world->SimTime() - this->dataPtr->startTime;
   if (elapsed.Double() * this->dataPtr->rateModifier >= this->dataPtr->objects.front().time)
   {
     auto obj = this->dataPtr->objects.front();
     if (this->dataPtr->frame)
     {
-      auto framePose = this->dataPtr->frame->GetWorldPose().Ign();
+      auto framePose = this->dataPtr->frame->WorldPose();
       ignition::math::Matrix4d transMat(framePose);
-      ignition::math::Matrix4d pose_local(obj.pose.Ign());
+      ignition::math::Matrix4d pose_local(obj.pose);
       obj.pose = (transMat * pose_local).Pose();
     }
     std::string modelName = this->GetHandle() + "|" + obj.type;
@@ -355,13 +355,13 @@ void PopulationPlugin::OnUpdate()
 
     // Get a unique name for the object.
     modelName += "_clone_" + std::to_string(index);
-    auto modelPtr = this->dataPtr->world->GetModel(modelName);
+    auto modelPtr = this->dataPtr->world->ModelByName(modelName);
     if (modelPtr)
     {
       // Move it to the target pose.
       modelPtr->SetWorldPose(obj.pose);
-      modelPtr->SetLinearVel(math::Vector3::Zero);
-      modelPtr->SetLinearAccel(math::Vector3::Zero);
+      modelPtr->SetLinearVel(ignition::math::Vector3d::Zero);
+      modelPtr->SetLinearAccel(ignition::math::Vector3d::Zero);
       gzdbg << "Object [" << modelName << "] on belt" << std::endl;
     }
 
@@ -420,7 +420,7 @@ bool PopulationPlugin::TimeToExecute()
   if (this->dataPtr->updateRate <= 0)
     return true;
 
-  gazebo::common::Time curTime = this->dataPtr->world->GetSimTime();
+  gazebo::common::Time curTime = this->dataPtr->world->SimTime();
   auto dt = (curTime - this->dataPtr->lastUpdateTime).Double();
   if (dt < 0)
   {
