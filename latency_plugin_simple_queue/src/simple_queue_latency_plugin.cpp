@@ -7,7 +7,7 @@ namespace latency_plugin_simple_queue
 bool SimpleQueueLatencyPlugin::initPlugin(const std::string& robot_namespace, ros::NodeHandle model_nh, int n_dof_)
 {
   n_dof = n_dof_;
-  queue_length = model_nh.param<int>("/latency_plugin_simple_queue/queue_length", 0);
+  queue_length = model_nh.param<int>("latency_plugin_simple_queue/queue_length", 0);
   no_delay = queue_length == 0 ? true : false;
   if (!no_delay) {
     queue_state = std::deque<RobotData>(queue_length, RobotData(n_dof_));
