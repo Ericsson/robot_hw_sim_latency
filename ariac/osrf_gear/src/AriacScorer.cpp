@@ -19,9 +19,9 @@
 #include <string>
 
 #include <gazebo/common/Console.hh>
-#include <gazebo/math/Pose.hh>
-#include <gazebo/math/Vector3.hh>
-#include <gazebo/math/Quaternion.hh>
+#include <ignition/math/Pose3.hh>
+#include <ignition/math/Vector3.hh>
+#include <ignition/math/Quaternion.hh>
 
 #include "osrf_gear/AriacScorer.h"
 
@@ -260,20 +260,20 @@ ariac::TrayScore AriacScorer::ScoreTray(const ariac::KitTray & tray, const ariac
       // Check the position of the object (ignoring orientation)
       gzdbg << "Comparing pose '" << currentObject.pose << \
         "' with the assigned pose '" << assignedObject.pose << "'" << std::endl;
-      gazebo::math::Vector3 posnDiff(
-        currentObject.pose.pos.x - assignedObject.pose.pos.x,
-        currentObject.pose.pos.y - assignedObject.pose.pos.y,
+      ignition::math::Vector3d posnDiff(
+        currentObject.pose.Pos().X() - assignedObject.pose.Pos().X(),
+        currentObject.pose.Pos().Y() - assignedObject.pose.Pos().Y(),
         0);
-      gzdbg << "Position error: " << posnDiff.GetLength() << std::endl;
-      if (posnDiff.GetLength() > scoringParameters.distanceThresh)
+      gzdbg << "Position error: " << posnDiff.Length() << std::endl;
+      if (posnDiff.Length() > scoringParameters.distanceThresh)
         continue;
       gzdbg << "Object of type '" << currentObject.type << \
         "' in the correct position" << std::endl;
       score.partPose += scoringParameters.objectPosition;
 
       // Check the orientation of the object.
-      gazebo::math::Quaternion objOrientation = currentObject.pose.rot;
-      gazebo::math::Quaternion orderOrientation = assignedObject.pose.rot;
+      ignition::math::Quaternion<double> objOrientation = currentObject.pose.Rot();
+      ignition::math::Quaternion<double> orderOrientation = assignedObject.pose.Rot();
 
       // Filter objects that aren't in the appropriate orientation (loosely).
       // If the quaternions represent the same orientation, q1 = +-q2 => q1.dot(q2) = +-1
@@ -287,7 +287,7 @@ ariac::TrayScore AriacScorer::ScoreTray(const ariac::KitTray & tray, const ariac
         continue;
 
       // Filter the yaw based on a threshold set in radians (more user-friendly).
-      double angleDiff = objOrientation.GetYaw() - orderOrientation.GetYaw();
+      double angleDiff = objOrientation.Yaw() - orderOrientation.Yaw();
       gzdbg << "Orientation error (yaw): " << std::abs(angleDiff) << \
         " (or " << std::abs(std::abs(angleDiff) - 2 * M_PI) << ")" << std::endl;
       if (std::abs(angleDiff) > scoringParameters.orientationThresh)
@@ -424,10 +424,10 @@ void AriacScorer::FillKitFromMsg(const osrf_gear::TrayContents::ConstPtr &trayMs
     obj.isFaulty = objMsg.is_faulty;
     geometry_msgs::Point p = objMsg.pose.position;
     geometry_msgs::Quaternion o = objMsg.pose.orientation;
-    gazebo::math::Vector3 objPosition(p.x, p.y, p.z);
-    gazebo::math::Quaternion objOrientation(o.w, o.x, o.y, o.z);
+    ignition::math::Vector3d objPosition(p.x, p.y, p.z);
+    ignition::math::Quaternion<double> objOrientation(o.w, o.x, o.y, o.z);
     objOrientation.Normalize();
-    obj.pose = gazebo::math::Pose(objPosition, objOrientation);
+    obj.pose = ignition::math::Pose3d(objPosition, objOrientation);
     kit.objects.push_back(obj);
   }
 }
@@ -442,9 +442,9 @@ void AriacScorer::FillKitFromMsg(const osrf_gear::Kit &kitMsg, ariac::Kit &kit)
     obj.type = ariac::DetermineModelType(objMsg.type);
     geometry_msgs::Point p = objMsg.pose.position;
     geometry_msgs::Quaternion o = objMsg.pose.orientation;
-    gazebo::math::Vector3 objPosition(p.x, p.y, p.z);
-    gazebo::math::Quaternion objOrientation(o.w, o.x, o.y, o.z);
-    obj.pose = gazebo::math::Pose(objPosition, objOrientation);
+    ignition::math::Vector3d objPosition(p.x, p.y, p.z);
+    ignition::math::Quaternion<double> objOrientation(o.w, o.x, o.y, o.z);
+    obj.pose = ignition::math::Pose3d(objPosition, objOrientation);
     kit.objects.push_back(obj);
   }
 }

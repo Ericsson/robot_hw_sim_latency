@@ -5,15 +5,15 @@ namespace latency_plugin_simple_queue
 bool SimpleQueueLatencyPlugin::initPlugin(const std::string& robot_namespace, ros::NodeHandle model_nh, int n_dof_)
 {
   n_dof = n_dof_;
-  nh = ros::NodeHandle("/latency_plugin_simple_queue/");
-  queue_length = nh.param<int>("/latency_plugin_simple_queue/queue_length", 0);
+  nh = ros::NodeHandle("latency_plugin_simple_queue/");
+  queue_length = nh.param<int>("latency_plugin_simple_queue/queue_length", 0);
   low_latency_queue_length = 1;
   ros::AsyncSpinner spinner(1);
 
   low_latency = false;
   prev_low_latency = false;
 
-  sub = nh.subscribe("/latency_plugin_simple_queue/priority", 1, &SimpleQueueLatencyPlugin::queue_length_callback, this);
+  sub = nh.subscribe("latency_plugin_simple_queue/priority", 1, &SimpleQueueLatencyPlugin::queue_length_callback, this);
   //~ sub = nh.subscribe("/figment/trajectory/precision", 1, &SimpleQueueLatencyPlugin::queue_length_callback, this);
 
   no_delay = queue_length == 0 ? true : false;

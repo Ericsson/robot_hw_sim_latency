@@ -33,7 +33,7 @@ KitTrayPlugin::KitTrayPlugin() : SideContactPlugin()
 /////////////////////////////////////////////////
 KitTrayPlugin::~KitTrayPlugin()
 {
-  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+//  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
   this->parentSensor.reset();
   this->world.reset();
 }
@@ -140,7 +140,7 @@ void KitTrayPlugin::ProcessContactingModels()
     this->contactingModels.insert(link->GetParentModel());
   }
   this->currentKit.objects.clear();
-  auto trayPose = this->parentLink->GetWorldPose().Ign();
+  auto trayPose = this->parentLink->WorldPose();
   for (auto model : this->contactingModels) {
     if (model) {
       model->SetAutoDisable(false);
@@ -155,11 +155,11 @@ void KitTrayPlugin::ProcessContactingModels()
       object.isFaulty = it != this->faultyPartNames.end();
 
       // Determine the pose of the object in the frame of the tray
-      math::Pose objectPose = model->GetWorldPose();
+      ignition::math::Pose3d objectPose = model->WorldPose();
       ignition::math::Matrix4d transMat(trayPose);
-      ignition::math::Matrix4d objectPoseMat(objectPose.Ign());
+      ignition::math::Matrix4d objectPoseMat(objectPose);
       object.pose = (transMat.Inverse() * objectPoseMat).Pose();
-      object.pose.rot.Normalize();
+      object.pose.Rot().Normalize();
 
       this->currentKit.objects.push_back(object);
     }
@@ -196,13 +196,13 @@ void KitTrayPlugin::PublishKitMsg()
     osrf_gear::DetectedObject msgObj;
     msgObj.type = obj.type;
     msgObj.is_faulty = obj.isFaulty;
-    msgObj.pose.position.x = obj.pose.pos.x;
-    msgObj.pose.position.y = obj.pose.pos.y;
-    msgObj.pose.position.z = obj.pose.pos.z;
-    msgObj.pose.orientation.x = obj.pose.rot.x;
-    msgObj.pose.orientation.y = obj.pose.rot.y;
-    msgObj.pose.orientation.z = obj.pose.rot.z;
-    msgObj.pose.orientation.w = obj.pose.rot.w;
+    msgObj.pose.position.x = obj.pose.Pos().X();
+    msgObj.pose.position.y = obj.pose.Pos().Y();
+    msgObj.pose.position.z = obj.pose.Pos().Z();
+    msgObj.pose.orientation.x = obj.pose.Rot().X();
+    msgObj.pose.orientation.y = obj.pose.Rot().Y();
+    msgObj.pose.orientation.z = obj.pose.Rot().Z();
+    msgObj.pose.orientation.w = obj.pose.Rot().W();
 
     // Add the object to the kit.
     kitTrayMsg.objects.push_back(msgObj);
@@ -231,7 +231,7 @@ void KitTrayPlugin::LockContactingModels()
   for (auto model : this->contactingModels)
   {
   // Create the joint that will attach the models
-  fixedJoint = this->world->GetPhysicsEngine()->CreateJoint(
+  fixedJoint = this->world->Physics()->CreateJoint(
         "fixed", this->model);
   auto jointName = this->model->GetName() + "_" + model->GetName() + "__joint__";
   gzdbg << "Creating fixed joint: " << jointName << std::endl;
@@ -240,7 +240,7 @@ void KitTrayPlugin::LockContactingModels()
   model->SetGravityMode(false);
 
   // Lift the part slightly because it will fall through the tray if the tray is animated
-  model->SetWorldPose(model->GetWorldPose() + math::Pose(0,0,0.01,0,0,0));
+  model->SetWorldPose(model->WorldPose() + ignition::math::Pose3d(0,0,0.01,0,0,0));
 
   auto modelName = model->GetName();
   auto linkName = modelName + "::link";
@@ -258,7 +258,7 @@ void KitTrayPlugin::LockContactingModels()
     }
   }
   link->SetGravityMode(false);
-  fixedJoint->Load(link, this->parentLink, math::Pose());
+  fixedJoint->Load(link, this->parentLink, ignition::math::Pose3d());
   fixedJoint->Attach(this->parentLink, link);
   fixedJoint->Init();
   this->fixedJoints.push_back(fixedJoint);

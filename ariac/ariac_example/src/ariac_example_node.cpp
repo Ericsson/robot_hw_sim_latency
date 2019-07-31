@@ -169,7 +169,7 @@ void proximity_sensor_callback(const sensor_msgs::Range::ConstPtr & msg) {
 
 void laser_profiler_callback(const sensor_msgs::LaserScan::ConstPtr & msg) {
   size_t number_of_valid_ranges = std::count_if(
-    msg->ranges.begin(), msg->ranges.end(), std::isfinite<float>);
+    msg->ranges.begin(), msg->ranges.end(), [](const float f) {return std::isfinite(f);});
   if (number_of_valid_ranges > 0) {
     ROS_INFO_THROTTLE(1, "Laser profiler sees something.");
   }

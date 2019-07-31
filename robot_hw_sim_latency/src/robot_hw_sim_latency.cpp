@@ -94,7 +94,7 @@ bool RobotHWSimLatency::initSim(const std::string& robot_namespace, ros::NodeHan
   std::string latency_plugin_str;
   sim_latency_plugin_loader_.reset(new pluginlib::ClassLoader<robot_hw_sim_latency::SimLatencyPlugin>(
       "robot_hw_sim_latency", "robot_hw_sim_latency::SimLatencyPlugin"));
-  model_nh.param<std::string>("/robot_hw_sim_latency/latency_plugin", latency_plugin_str, "robot_hw_sim_latency/"
+  model_nh.param<std::string>("robot_hw_sim_latency/latency_plugin", latency_plugin_str, "robot_hw_sim_latency/"
                                                                                           "DefaultSimLatencyPlugin");
                                                                                           
   ROS_WARN_STREAM_NAMED("robot_hw_sim_latency", "Loading latency plugin: " << latency_plugin_str );
@@ -288,11 +288,11 @@ void RobotHWSimLatency::readSim(ros::Time time, ros::Duration period)
   for (unsigned int j = 0; j < n_dof_; j++) {
     // Gazebo has an interesting API...
     if (joint_types_[j] == urdf::Joint::PRISMATIC) {
-      current_joint_position_[j] = sim_joints_[j]->GetAngle(0).Radian();
+      current_joint_position_[j] = sim_joints_[j]->Position();
       // ROS_WARN_STREAM_ONCE_NAMED("robot_hw_sim_latency", "PRISM");
     } else {
       current_joint_position_[j] +=
-          angles::shortest_angular_distance(current_joint_position_[j], sim_joints_[j]->GetAngle(0).Radian());
+          angles::shortest_angular_distance(current_joint_position_[j], sim_joints_[j]->Position());
     }
     current_joint_velocity_[j] = sim_joints_[j]->GetVelocity(0);
     //("robot_hw_sim_latency","joint "<< joint_names_[j] << " cvel: "<<current_joint_velocity_[j]<< " cpos:

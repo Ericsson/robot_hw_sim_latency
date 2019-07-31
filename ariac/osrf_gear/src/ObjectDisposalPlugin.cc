@@ -32,7 +32,7 @@ ObjectDisposalPlugin::ObjectDisposalPlugin() : SideContactPlugin()
 /////////////////////////////////////////////////
 ObjectDisposalPlugin::~ObjectDisposalPlugin()
 {
-  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
+//  event::Events::DisconnectWorldUpdateBegin(this->updateConnection);
   this->parentSensor.reset();
   this->world.reset();
 }
@@ -59,7 +59,7 @@ void ObjectDisposalPlugin::Load(physics::ModelPtr _model, sdf::ElementPtr _sdf)
     return;
   }
 
-  this->disposalPose = _sdf->Get<math::Pose>("disposal_pose");
+  this->disposalPose = _sdf->Get<ignition::math::Pose3d>("disposal_pose");
 }
 
 /////////////////////////////////////////////////
@@ -79,12 +79,12 @@ void ObjectDisposalPlugin::ActOnContactingModels()
 {
   // Only remove models if their center of gravity is "above" the link
   // TODO: make more general than just z axis
-  auto linkBox = this->parentLink->GetBoundingBox();
-  auto linkBoxMax = linkBox.max;
-  auto linkBoxMin = linkBox.min;
-  linkBoxMin.z = std::numeric_limits<double>::lowest();
-  linkBoxMax.z = std::numeric_limits<double>::max();
-  auto disposalBox = math::Box(linkBoxMin, linkBoxMax);
+  auto linkBox = this->parentLink->BoundingBox();
+  auto linkBoxMax = linkBox.Max();
+  auto linkBoxMin = linkBox.Min();
+  linkBoxMin.Z() = std::numeric_limits<double>::lowest();
+  linkBoxMax.Z() = std::numeric_limits<double>::max();
+  auto disposalBox = ignition::math::Box(linkBoxMin, linkBoxMax);
 
   for (auto model : this->contactingModels) {
     if (model) {
@@ -92,12 +92,12 @@ void ObjectDisposalPlugin::ActOnContactingModels()
       if (this->centerOfGravityCheck)
       {
         // Calculate the center of gravity of the model
-        math::Vector3 modelCog = math::Vector3::Zero;
+        ignition::math::Vector3d modelCog = ignition::math::Vector3d::Zero;
         double modelMass = 0.0;
         for (auto modelLink : model->GetLinks())
         {
-          double linkMass = modelLink->GetInertial()->GetMass();
-          modelCog += modelLink->GetWorldCoGPose().pos * linkMass;
+          double linkMass = modelLink->GetInertial()->Mass();
+          modelCog += modelLink->WorldCoGPose().Pos() * linkMass;
           modelMass += linkMass;
         }
         if (modelMass > 0.0)

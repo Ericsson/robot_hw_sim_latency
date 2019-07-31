@@ -23,7 +23,7 @@
 
 #include <sdf/sdf.hh>
 
-#include "gazebo/math/Pose.hh"
+#include "ignition/math/Pose3.hh"
 #include "gazebo/common/Plugin.hh"
 #include "gazebo/common/UpdateInfo.hh"
 #include "gazebo/msgs/logical_camera_image.pb.h"
@@ -80,16 +80,16 @@ namespace gazebo
     protected: bool ModelToPublish(const std::string & modelName, const std::string & modelType);
 
     /// \brief Add noise to a model pose
-    protected: void AddNoise(math::Pose & pose);
+    protected: void AddNoise(ignition::math::Pose3d & pose);
 
     /// \brief Add model info to the message to be published
     protected: void AddModelToMsg(
-      const std::string & modelType, const math::Pose & modelPose,
+      const std::string & modelType, const ignition::math::Pose3d & modelPose,
       osrf_gear::LogicalCameraImage & imageMsg);
 
     /// \brief Publish the TF frame of a model
     protected: void PublishTF(
-      const math::Pose & pose, const std::string & parentFrame, const std::string & frame);
+      const ignition::math::Pose3d & pose, const std::string & parentFrame, const std::string & frame);
 
     /// \brief Node for communication with gazebo
     protected: transport::NodePtr node;
@@ -123,7 +123,7 @@ namespace gazebo
     protected: std::map<std::string, sensors::NoisePtr> noiseModels;
 
     /// \brief Pose of kit trays w.r.t. their parent AGV
-    protected: math::Pose kitTrayToAgv;
+    protected: ignition::math::Pose3d kitTrayToAgv;
 
     /// \brief TF broadcaster for model frames
     protected: boost::shared_ptr<tf::TransformBroadcaster> transformBroadcaster;
