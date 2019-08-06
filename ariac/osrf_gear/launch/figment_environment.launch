@@ -1,6 +1,0 @@
-<launch>
-  <arg name="competition" default="finals/final01.yaml" />
-  <arg name="competition_full" default="$(find osrf_gear)/config/$(arg competition)" />
-  <node name="ariac_sim" pkg="osrf_gear" type="gear.py" required="false"
-        args="-f '$(arg competition_full)' $(find figment_ariac)/config/figment_gear_conf.yaml" output="screen"/><!--  -v verbose -->
-</launch>
