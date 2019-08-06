@@ -171,11 +171,11 @@ def connect_callbacks(comp_class):
     rospy.loginfo("[connect_callbacks] agv_2_state_callback OK")  
     rospy.loginfo("[connect_callbacks] setting joint_state_callback")
     joint_state_sub = rospy.Subscriber(
-        "/ariac/joint_states", JointState, comp_class.joint_state_callback)
+        "/ariac/arm1/joint_states", JointState, comp_class.joint_state_callback)
     rospy.loginfo("[connect_callbacks] joint_state_callback OK")
     rospy.loginfo("[connect_callbacks] setting gripper_state_callback")
     gripper_state_sub = rospy.Subscriber(
-        "/ariac/gripper/state", VacuumGripperState, comp_class.gripper_state_callback)
+        "/ariac/arm1/gripper/state", VacuumGripperState, comp_class.gripper_state_callback)
     rospy.loginfo("[connect_callbacks] gripper_state_callback OK")
     rospy.loginfo("[connect_callbacks] setting quality_control_sensor_1_callback")
     quality_control_sensor_1 = rospy.Subscriber(

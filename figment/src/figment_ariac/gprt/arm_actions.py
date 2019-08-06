@@ -37,7 +37,7 @@ def init():
     """
     global joint_trajectory_publisher
     joint_trajectory_publisher = rospy.Publisher(
-        "/ariac/arm/command", JointTrajectory, queue_size=5)
+        "/ariac/arm1/arm/command", JointTrajectory, queue_size=5)
 
     
     global joint_trajectory_precision

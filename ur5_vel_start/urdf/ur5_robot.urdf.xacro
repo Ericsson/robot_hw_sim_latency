@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro"
-       name="ur5_robot" >
+       name="ur10" >
 
   <xacro:property name="PI" value="3.14159265359"/>
   <xacro:property name="flange_radius" value="0.04"/>
@@ -21,7 +21,7 @@
   <xacro:include filename="$(find ur5_vel_start)/urdf/ur5.urdf.xacro" />
 
   <!-- arm -->
-  <xacro:ur5_robot prefix="$(arg ns)" joint_limited="true"/>
+  <xacro:ur10 prefix="$(arg ns)" joint_limited="true"/>
 
   <link name="world" />
 

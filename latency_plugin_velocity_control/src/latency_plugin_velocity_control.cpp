@@ -5,9 +5,9 @@ namespace latency_plugin_velocity_control
 bool VelocityControlPlugin::initPlugin(const std::string& robot_namespace, ros::NodeHandle model_nh, int n_dof_)
 {
   n_dof = n_dof_;
-  nh = ros::NodeHandle("/latency_plugin_velocity_control/");
-  pub = nh.advertise<std_msgs::Float64MultiArray>("/latency_plugin_velocity_control/joint_speeds", 1);
-  jointstate_sub = nh.subscribe<sensor_msgs::JointState>("/latency_plugin_velocity_control/joint_states", 1,
+  nh = ros::NodeHandle("latency_plugin_velocity_control/");
+  pub = nh.advertise<std_msgs::Float64MultiArray>("latency_plugin_velocity_control/joint_speeds", 1);
+  jointstate_sub = nh.subscribe<sensor_msgs::JointState>("latency_plugin_velocity_control/joint_states", 1,
                                                          &VelocityControlPlugin::handleJointStateMessage, this);
 
   //const double params[2][6] = {{0.3, 0.3, 0.3, 0.4, 0.4, 0.4}, {0.3, 0.3, 0.3, 0.4, 0.4, 0.4}};

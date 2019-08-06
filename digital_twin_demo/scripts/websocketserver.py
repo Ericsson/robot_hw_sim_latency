@@ -421,7 +421,8 @@ async def run_competition(options):
     await send_message("Starting competition")
     
     # Start the competition environment
-    ariac_roslaunch_file = [(osrf_gear_folder+"/launch/figment_environment.launch", ["competition_full:=/tmp/digitaltwindemo/setup.yaml",])]        
+    ariac_roslaunch_file = [(osrf_gear_folder+"/launch/sample_environment.launch")]
+    #ariac_roslaunch_file = [(cygment_folder+"/launch/qual_a_2.launch")]
     ariac_launch = roslaunch.parent.ROSLaunchParent(uuid, ariac_roslaunch_file , is_core=False, verbose=True)
     print("Created ariac ROSLaunch")
     ariac_launch.start(auto_terminate=True)
@@ -442,29 +443,30 @@ async def run_competition(options):
     unpause = rospy.ServiceProxy('/gazebo/unpause_physics', Empty)
     pause = rospy.ServiceProxy('/gazebo/pause_physics', Empty)
     
-    rospy.wait_for_service('/gazebo/unpause_physics',5)
-    time.sleep(5)
-    
-    figment_node = roslaunch.core.Node("figment_ariac", "scheduler_plan", 
+    rospy.wait_for_service('/gazebo/unpause_physics', 15)
+    time.sleep(10)
+
+    figment_node = roslaunch.core.Node("figment_ariac", "scheduler_plan",
+    #figment_node = roslaunch.core.Node("cygment", "cygment_node",
         output="screen")
     print("Created figment node")
-    
+
     # Start the figment solver code
     figment_process, success = ariac_launch.runner.launch_node(figment_node)
     print("Launched figment node success:"+str(success))
     await send_message("Started competition solver")
 
     time.sleep(2)
-    
+
     if options["qoc"]:
         qoc_sub = rospy.Subscriber("/figment/trajectory/precision", String, partial(qoc_callback,options["latency"]))
     else:
         qoc_sub = None
-    
+
     time.sleep(3)
     #Step simulation 4 times to start the controllers
     subprocess.call(["gz","world","-m","1"])
-    
+
     # Start ur_modern_driver
     ur_roslaunch_file = [(ur5_vel_start_folder+"/launch/setup.launch", ["robot_ip:="+robot_ip, 
                                                                         "sim:=false", 
@@ -478,21 +480,21 @@ async def run_competition(options):
     print("Started ur roslaunch")
     await send_message("Started UR controller")
 
-    
+
     subprocess.call(["gz","world","-m","1"])
     #asyncio.get_event_loop().create_task(wait_for_result())
-    
-    
-    
+
+
+
     time.sleep(2)
-    
+
     subprocess.call(["gz","world","-m","4"])
-    
+
     time.sleep(2)
-    
+
     await send_message("Unpausing simulation")
     unpause()
-    
+
 async def stop_competition():
     global ariac_launch
     global ur_launch
@@ -502,9 +504,9 @@ async def stop_competition():
     global figment_process
     global stopping_event
     global order_num
-    
+
     await send_message("Stopping competition")
-    
+
     if comp_state_sub is not None:
         comp_state_sub.unregister()
     if qoc_sub is not None:
@@ -518,7 +520,7 @@ async def stop_competition():
         while figment_process.is_alive():
             print("Waiting for figment stop!")
             await asyncio.sleep(1)
-            
+
     if ariac_launch is not None:
         ariac_launch.shutdown()
         while not ariac_launch.runner.pm.done:
@@ -531,13 +533,13 @@ async def stop_competition():
             print("Waiting for ur_launch to stop!")
             await asyncio.sleep(1)
         ur_launch = None
-        
+
     order_num = [0,0];
     stopping_event.clear()
     await send_message("Stopped competition!")
-    
 
-        
+
+
 gl_websocket = None
 competition_result = None
 # Main server loop
@@ -546,7 +548,7 @@ async def handler(websocket, path):
     gl_websocket = websocket
     while True:
         message = None
-        
+
         while True:
             m = await websocket.recv()
             message = json.loads(m)
@@ -555,7 +557,7 @@ async def handler(websocket, path):
                 
         
         await send_message("Generating config!")
-        
+
         options = generate_config(message["params"])
         await run_competition(options)
         await stopping_event.wait()
@@ -564,13 +566,13 @@ async def handler(websocket, path):
         await get_result()
         print("Wait done!")
         await stop_competition()
-        
+
         await send_message("Finishing demo...")
         await asyncio.sleep(10)
 
         print("Done, sending END")
         await websocket.send(json.dumps({"messagetype":"END"}))
-        
+
 osrf_gear_folder = None
 figment_folder = None
 ur5_vel_start_folder = None
@@ -628,7 +630,7 @@ async def ask_exit(signame, loop):
     run_steps(teardown_latency,{})
 
     loop.stop()
-    
+
 def get_if(ip):
     res = subprocess.check_output(["ip", "route", "get", ip])
     res = res.decode().split(' ')[2]
@@ -639,26 +641,28 @@ def main(sysargv=None):
     global sudo_pw
     global tc_params
     global osrf_gear_folder
-    global figment_folderr
+    global figment_folder
+    #global cygment_folder
     global ur5_vel_start_folder
     robot_ip = sysargv[0]
     tc_params["robot_if"] = get_if(robot_ip)
-    
+
     print(tc_params["robot_if"])
-    
+
     tc_params["sudo_pw"] = os.environ.get('SUDO_PASSWORD')
     if tc_params["sudo_pw"] is None:
         print("Export your sudo password to SUDO_PASSWORD envvar")
         sys.exit(1)
-        
+
     run_steps(setup_latency, {})
-    
+
     osrf_gear_folder = rospack.get_path('osrf_gear')
     figment_folder = rospack.get_path('figment_ariac')
+    #cygment_folder = rospack.get_path('cygment')
     ur5_vel_start_folder = rospack.get_path('ur5_vel_start')
-    
-    pathlib.Path('/tmp/digitaltwindemo').mkdir(parents=True, exist_ok=True) 
-    
+
+    pathlib.Path('/tmp/digitaltwindemo').mkdir(parents=True, exist_ok=True)
+
     # Starts a node that will listen to messages from ariac
     rospy.init_node('websocketserver', anonymous=False, disable_signals=True)
 
@@ -668,7 +672,7 @@ def main(sysargv=None):
 
     start_server = websockets.serve(
         handler, serverip, serverport)
-        
+
     loop=asyncio.get_event_loop()
 
     loop.run_until_complete(start_server)
@@ -676,30 +680,30 @@ def main(sysargv=None):
         loop.add_signal_handler(
                 getattr(signal, signame),
                 lambda: asyncio.ensure_future(ask_exit(signame, loop)))
-    
+
     print("Started websocket server on", serverip, "port", serverport, "...")
     loop.run_forever()
     return 0
-    
+
 #def main(sysargv=None):
     #sudo_pw = os.environ.get('SUDO_PASSWORD')
     #if sudo_pw is None:
         #print("Export your sudo password to SUDO_PASSWORD envvar")
         #sys.exit(1)
-        
+
     #parser = argparse.ArgumentParser(
         #description='Runs a script in a network namespace with latency.')
     #prepare_arguments(parser)
     #args = parser.parse_args(sysargv)
     #parameters = vars(args)
     #parameters.update({'sudo_pw':sudo_pw})
-    
+
     #try:
         #run_steps(setup,parameters)
-    
+
         #if parameters["delay"]>0:
             #run_steps(setup_latency,parameters)
-            
+
         #run_steps(run_script,parameters)
     #except subprocess.CalledProcessError as ex:
         #print(str(ex))
@@ -709,7 +713,7 @@ def main(sysargv=None):
 
         #run_steps(teardown,parameters, ignore_errors=True)
 
-    
+
 if __name__ == '__main__':
     # Filter out any special ROS remapping arguments.
     # This is necessary if the script is being run from a ROS launch file.

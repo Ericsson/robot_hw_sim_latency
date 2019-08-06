@@ -81,7 +81,7 @@
   </xacro:macro>
 
 
-  <xacro:macro name="ur5_robot" params="prefix joint_limited">
+  <xacro:macro name="ur10" params="prefix joint_limited">
 
     <link name="${prefix}base_link" >
       <visual>

@@ -147,14 +147,14 @@ ROS Param configurations
 To control the UR5 robot using the latency plugin infrastructure we did the following:
 1. In the initPlugin function, I create a ros node that can publish and subscribe to ros topics.
 2. I subscribe to a topic through which I will receive joint states from the real UR arm, and register its callback function
-3. And I register a topic to which i will send velocity comands.
+3. And I register a topic to which i will send velocity commands.
 
 In the delayStates function I do nothing, just pass through the unmodified simulation joint state.
 In the callback function that handles the joint state messages I save the joint positions and velocities (joint states), and through a feed forward PID controller I compute a velocity command that I publish, this way I send a control message every time I receive a state message from the real robot.
 The controller's input is the position and velocity command that the delayCommand function received.
 
 The delayCommand function controls the simulated robot also using a feed forward PID controller the inputs being the joint states.
-Because the delayCommand function is called much more frequently than the callbach I implemented simple interpolation between position joint states.
+Because the delayCommand function is called much more frequently than the callback I implemented simple interpolation between position joint states.
 I do not directly use the position joint state, but I add the velocity joint state to it every time the delayCommand function runs, but the callback not, therefore every subsequent delayCommand call the position increases by the velocity * dt even when it wouldn't change because the callback was not called, this avoids abrupt changes in the position command sent by the delayCommands function.
 Also this function also saves the current velocity and position commands that the callback uses.
 

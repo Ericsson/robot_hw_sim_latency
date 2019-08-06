@@ -366,7 +366,7 @@ class ActionMove(Action):
 # The constructor receives a boolean indication whether to grip (True)
 # or release (False)
 class ActionCmdGripping(Action):
-    service_name = "/ariac/gripper/control"
+    service_name = "/ariac/arm1/gripper/control"
 
     def __init__(self, toGrip):
         self.toGrip = toGrip
@@ -388,7 +388,7 @@ class ActionCmdGripping(Action):
 
 
 class ActionGripping(Action):
-    service_name = "/ariac/gripper/control"
+    service_name = "/ariac/arm1/gripper/control"
 
     def __init__(self, toGrip):
         self.toGrip = toGrip
@@ -416,7 +416,7 @@ class ActionGripping(Action):
             return False
 
 class ActionGrippingCheck(Action):
-    service_name = "/ariac/gripper/control"
+    service_name = "/ariac/arm1/gripper/control"
 
     def __init__(self, toGrip, max_wait, inc_sleep=0.1):
         self.toGrip = toGrip

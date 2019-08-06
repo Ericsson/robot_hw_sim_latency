@@ -20,7 +20,7 @@ class Order:
     	self.order_id = ariac_order_msg.order_id
 
     	self.kits = []
-    	self.append_kits(self.kits, ariac_order_msg.kits)
+    	self.append_kits(self.kits, ariac_order_msg.shipments)
 
     	self.state = Status.INIT
         self.time_started = None
@@ -109,9 +109,9 @@ class Kit:
     def __init__(self, kit_id, parent_order, ariac_kit_msg):
     	self.kit_id = kit_id
     	self.parent_order = parent_order
-    	self.kit_type = ariac_kit_msg.kit_type
+    	self.kit_type = ariac_kit_msg.shipment_type
     	self.parts = []
-    	self.append_parts(self.parts, ariac_kit_msg.objects)
+    	self.append_parts(self.parts, ariac_kit_msg.products)
     	self.state = Status.INIT
         self.plan = None
         self.failed_count = 0

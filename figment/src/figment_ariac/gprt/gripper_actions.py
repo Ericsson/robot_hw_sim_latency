@@ -7,10 +7,10 @@ from constants import *
 
 
 def send_gripping_cmd(toGrip):
-    rospy.wait_for_service("/ariac/gripper/control")
+    rospy.wait_for_service("/ariac/arm1/gripper/control")
     try:
         gripping = rospy.ServiceProxy(
-            "/ariac/gripper/control", VacuumGripperControl)
+            "/ariac/arm1/gripper/control", VacuumGripperControl)
         success = gripping(toGrip)
         global_vars.partPicked = toGrip
         return success
@@ -22,7 +22,7 @@ def send_gripping_cmd(toGrip):
 
 
 def wait_for_gripper(toGrip, max_wait, inc_sleep=0.1):
-    rospy.wait_for_service("/ariac/gripper/control")
+    rospy.wait_for_service("/ariac/arm1/gripper/control")
     try:
         count = 1
         slept = 0

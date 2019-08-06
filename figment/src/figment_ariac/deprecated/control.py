@@ -120,13 +120,13 @@ def start_competition():
 
 def control_gripper(enabled):
     rospy.loginfo("Waiting for gripper control to be ready...")
-    rospy.wait_for_service('/ariac/gripper/control')
+    rospy.wait_for_service('/ariac/arm1/gripper/control')
     rospy.loginfo("Gripper control is now ready.")
     rospy.loginfo("Requesting gripper control...")
 
     try:
         gripper_control = rospy.ServiceProxy(
-            '/ariac/gripper/control', VacuumGripperControl)
+            '/ariac/arm1/gripper/control', VacuumGripperControl)
         response = gripper_control(enabled)
     except rospy.ServiceException as exc:
         rospy.logerr("Failed to control the gripper: %s" % exc)
@@ -196,7 +196,7 @@ class Gprt:
 
     def __init__(self):
         self.joint_trajectory_publisher = \
-            rospy.Publisher("/ariac/arm/command",
+            rospy.Publisher("/ariac/arm1/arm/command",
                             JointTrajectory, queue_size=5)
         self.current_comp_state = None
         self.received_orders = []
@@ -568,7 +568,7 @@ def connect_callbacks(comp_class):
     rospy.loginfo("[connect_callbacks] joint_state_callback OK")
     rospy.loginfo("[connect_callbacks] setting gripper_state_callback")
     gripper_state_sub = rospy.Subscriber(
-        "/ariac/gripper/state", VacuumGripperState, comp_class.gripper_state_callback)
+        "/ariac/arm1/gripper/state", VacuumGripperState, comp_class.gripper_state_callback)
     rospy.loginfo("[connect_callbacks] gripper_state_callback OK")
     rospy.loginfo("[connect_callbacks] setting quality_control_sensor_1_callback")
     quality_control_sensor_1 = rospy.Subscriber(
