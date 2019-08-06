@@ -1,0 +1,75 @@
+# In this scenario:
+# - the conveyor belt is used
+# - two orders are sent, both using parts from the belt and bins
+# - the second order requires different parts than the first
+
+options:
+  insert_models_over_bins: true
+  fill_demo_tray: false
+  model_type_aliases:
+    order_part1: part3
+    order_part2: part4
+    order_part3: part1
+    order_part4: part2
+
+
+belt_parts:
+  order_part1:
+    1.0:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 'pi/2']
+  order_part3:
+    2.0:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 'pi/2']
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    parts:
+      part_0:
+        type: order_part1
+        pose:
+          xyz: [0.15, 0.15, 0]
+          rpy: [0, 0, 0.5]
+      part_1:
+        type: order_part2
+        pose:
+          xyz: [-0.15, -0.15, 0]
+          rpy: [0, 0, -0.5]
+  order_1:
+    announcement_condition: wanted_parts
+    announcement_condition_value: 1
+    parts:
+      part_0:
+        type: order_part3
+        pose:
+          xyz: [0.1, 0.1, 0]
+          rpy: [0, 0, 0.5]
+      part_1:
+        type: order_part4
+        pose:
+          xyz: [-0.1, -0.1, 0]
+          rpy: [0, 0, 0.0]
+
+models_over_bins:
+  bin7:
+    models:
+       order_part2:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 3
+        num_models_y: 3
+
+  bin8:
+    models:
+       order_part4:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 4
+        num_models_y: 5

@@ -1,0 +1,11 @@
+<launch>
+  <!-- use a sample comp+user config, and a supplementary config file that
+      causes AGV1's tray to be filled when the comp starts -->
+  <node name="ariac_sim" pkg="osrf_gear" type="gear.py"
+        args="-f
+              $(find osrf_gear)/config/sample.yaml
+              $(find test_ariac)/test/fill_demo_tray.yaml
+              --verbose --no-gui"/>
+  <test pkg="test_ariac" type="test_example_node.py" test-name="ariac_example"
+        time-limit="60.0"/>
+</launch>

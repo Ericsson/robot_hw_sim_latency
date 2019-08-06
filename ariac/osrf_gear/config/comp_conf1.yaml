@@ -1,0 +1,179 @@
+# Competition configuration options
+# options:
+#   insert_models_over_bins: true     # Whether or not to insert the models that are specified in models_over_bins
+#   spawn_extra_models: true          # Whether or not to spawn the models that are specified in models_to_spawn
+#   fill_demo_tray: true              # If true, AGV1's tray will have parts from the first order spawned
+#                                     # directly ontop of it once the competition starts (for testing purposes)
+#   model_type_aliases:               # Aliases for model types which can be used in the configuration file
+#     belt_model_type1: gear_part     # Wherever 'belt_model_type1' is used in the configuration file, use 'gear_part'
+#
+# Parts to be spawned on the conveyor belt
+# belt_parts:
+#   model_type_1:                     # Type of model to insert
+#     1.0:                            # Time in seconds to wait before spawning models
+#       pose:
+#         xyz: [0.0, 0.0, 0.0]        # Position of the model from the belt origin
+#                                     # y = 0 is in the center of the belt; y > 0 is towards the robot
+#         rpy: [0, 0, 'pi/2']         # Orientation of the model in the belt frame
+#
+# Orders to announce during the game
+# orders:
+#   order_0:
+#     announcement_condition: time
+#     announcement_condition_value: 0.0# Time in seconds to wait before announcing the order
+#     parts:                          # List of parts required to be in the kit
+#       part_0:
+#         type: model_type_1          # Type of model required
+#         pose:
+#           xyz: [0.1, -0.15, 0]      # Position required in the kit tray frame
+#           rpy: [0, 0, 0]            # Orientation required in the kit tray frame
+#
+# Models to be inserted above the bins (templated into the world file)
+# models_over_bins:
+#   bin1:                             # Name of the bin (bin1-bin8, as named in the model)
+#     xyz: [1.5, 1.7, 0.75]           # (optional) Origin of the bin, if you want to over-write the default
+#     models:                         # List of models to insert
+#       model_type_1:                 # Type of model to insert
+#         xyz_start: [0.1, 0.2, 0.0]  # Origin of the first model to insert
+#         xyz_end: [0.4, 0.6, 0.0]    # Origin of the last model to insert
+#         rpy: [0, 0, 0]              # Orientation of all models to insert
+#         num_models_x: 4             # How many models to insert along the x dimension
+#         num_models_y: 6             # How many models to insert along the y dimension
+#
+# Models to be spawned in particular reference frames (templated into the launch file)
+# models_to_spawn:
+#   reference_frame_name:             # Name of the reference frame (e.g. workcell::bin8::link)
+#     models:                         # List of models to spawn
+#       model_name:                   # Name of the model
+#         type: part2                 # Type of model (note that only local models are supported)
+#         pose:
+#           xyz: [0.1, 0.1, 0.725]    # Co-ordinates of the model origin in the specified reference frame
+#           rpy: [0, 0, '-pi/2']      # Roll, pitch, yaw of the model in the specified reference frame
+
+options:
+  insert_models_over_bins: true
+  spawn_extra_models: false
+  fill_demo_tray: false
+
+  model_type_aliases:
+    belt_model_type1: piston_rod_part
+    belt_model_type2: part4
+
+belt_parts:
+  belt_model_type1:
+    0.9:
+      pose:
+        xyz: [0.0, 0.175, 0.1]
+        rpy: [0, 0, 'pi/2']
+
+  belt_model_type2:
+    1.9:
+      pose:
+        xyz: [0.0, -0.1, 0.1]
+        rpy: [0, 0, 'pi/2']
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    parts:
+      part_0:
+        type: belt_model_type1
+        pose:
+          xyz: [0.1, -0.15, 0]
+          rpy: [0, 0, 0]
+      part_1:
+        type: belt_model_type2
+        pose:
+          xyz: [0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+
+models_to_spawn:
+  # Spawn some models close to the arm
+  conveyor_belt::belt:
+    models:
+      part1:
+        type: belt_model_type1
+        pose:
+          xyz: [1.5, 0, 0.1]
+          rpy: [0, 0, 0]
+      part2:
+        type: belt_model_type2
+        pose:
+          xyz: [1.7, 0, 0.1]
+          rpy: [0, 0, 0]
+
+models_over_bins:
+  bin1:
+    models:
+      piston_rod_part:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 3
+        num_models_y: 4
+
+  bin2:
+    models:
+      pulley_part:
+        xyz_start: [0.15, 0.15, 0.0]
+        xyz_end: [0.45, 0.45, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 2
+        num_models_y: 2
+
+  bin3:
+    models:
+      gear_part:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 5
+        num_models_y: 5
+
+  bin4:
+    models:
+      gasket_part:
+        xyz_start: [0.15, 0.15, 0.0]
+        xyz_end: [0.45, 0.45, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+  bin8:
+    models:
+      pulley_part:
+        xyz_start: [0.15, 0.15, 0.0]
+        xyz_end: [0.45, 0.45, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 2
+        num_models_y: 2
+
+  bin7:
+    models:
+      piston_rod_part:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 3
+        num_models_y: 4
+
+  bin6:
+    models:
+       part3:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 3
+        num_models_y: 3
+
+  bin5:
+    models:
+       part4:
+        xyz_start: [0.1, 0.1, 0.0]
+        xyz_end: [0.5, 0.5, 0.0]
+        rpy: [0, 0, 0]
+        num_models_x: 4
+        num_models_y: 5
+
+time_limit: 300

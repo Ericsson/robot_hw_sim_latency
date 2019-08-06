@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>test_ariac</name>
+  <version>0.1.0</version>
+  <description>
+    The ROS package for testing the NIST Industrial Automation Competition.
+  </description>
+  <maintainer email="dhood@osrfoundation.org">D. Hood</maintainer>
+  <license>Apache 2.0</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <depend>osrf_gear</depend>
+  <depend>ariac_example</depend>
+
+</package>

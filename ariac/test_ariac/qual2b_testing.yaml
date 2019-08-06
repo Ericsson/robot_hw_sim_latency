@@ -1,0 +1,65 @@
+# In this scenario:
+# - the conveyor belt is used
+# - there is one order consisting of a part that is in both the bins and the belt,
+#   and a part that is only on the belt
+
+options:
+  insert_models_over_bins: true
+  fill_demo_tray: true
+  gazebo_state_logging: true
+  belt_population_cycles: 5
+  model_type_aliases:
+    belt_model_type1: gasket_part
+    belt_model_type2: disk_part
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    kit_count: 1
+    parts:
+      part_0:
+        type: belt_model_type1
+        pose:
+          xyz: [0.1, -0.15, 0]
+          rpy: [0, 0, 'pi/2']
+      part_1:
+        type: belt_model_type1
+        pose:
+          xyz: [-0.1, -0.15, 0]
+          rpy: [0, 0, 'pi/2']
+      part_2:
+        type: belt_model_type2
+        pose:
+          xyz: [0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+      part_3:
+        type: belt_model_type2
+        pose:
+          xyz: [-0.1, 0.15, 0]
+          rpy: [0, 0, 0]
+
+belt_parts:
+  belt_model_type1:
+    4.9:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 0]
+
+  belt_model_type2:
+    9.9:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 'pi/2']
+
+models_over_bins:
+  bin5:
+    models:
+      belt_model_type2:
+        xyz_start: [0.2, 0.2, 0.0]
+        xyz_end: [0.4, 0.4, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 2
+        num_models_y: 2
+
+time_limit: -1

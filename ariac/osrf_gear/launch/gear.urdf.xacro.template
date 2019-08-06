@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"
+       name="gear" >
+
+@[if arm]@
+  <!-- include the arm xacro -->
+@[if arm.type == 'ur10']@
+  <xacro:include filename="$(find osrf_gear)/launch/ur10/ur10.urdf.xacro" />
+  <xacro:property name="wrist_link" value="wrist_3_link" />
+@[end if]@
+
+  <!-- vacuum gripper -->
+  <xacro:include filename="$(find osrf_gear)/launch/vacuum_gripper/vacuum_gripper.urdf.xacro" />
+
+  <xacro:create_vacuum_gripper wrist_link="${wrist_link}" >
+    <drops_info>
+@[if drops]@
+      <drops>
+        <drop_regions>
+@[for drop_region in drops['drop_regions']]@
+          <drop_region>
+            <min>@(' '.join(drop_region.min))</min>
+            <max>@(' '.join(drop_region.max))</max>
+            <destination>@(' '.join(drop_region.destination.xyz)) @(' '.join(drop_region.destination.rpy))</destination>
+            <type>@(drop_region.type)</type>
+          </drop_region>
+@[end for]@
+        </drop_regions>
+      </drops>
+@[end if]@
+    </drops_info>
+  </xacro:create_vacuum_gripper>
+@[end if]@
+
+  <!-- linear arm actuator -->
+  <xacro:include filename="$(find osrf_gear)/launch/linear_arm_actuator/linear_arm_actuator.urdf.xacro" />
+
+  <xacro:create_linear_arm_actuator base_link="base_link" />
+
+  <!-- world link -->
+  <link name="world" />
+
+  <joint name="world_joint" type="fixed">
+    <parent link="world" />
+    <child link="linear_arm_actuator" />
+    <origin xyz="0.3 0.0 0.9" rpy="0.0 0.0 0.0" />
+  </joint>
+
+  <!-- sensor links and fixed joints -->
+@[for name, sensor in sensors.items()]@
+@[if not name.startswith('logical_camera')  # logical cameras publish their own TF pose dynamically]@
+
+  <!-- a @(sensor.type) type sensor in the frame @(name)_frame -->
+  <link name="@(name)_frame" />
+  <joint name="@(name)_joint" type="fixed">
+    <parent link="world" />
+    <child link="@(name)_frame" />
+    <origin xyz="@(' '.join(sensor.pose.xyz))" rpy="@(' '.join(sensor.pose.rpy))" />
+  </joint>
+@[end if]@
+@[end for]@
+@[for name, pose in bins.items()]@
+  <!-- a bin in the frame @(name)_frame -->
+  <link name="@(name)_frame" />
+  <joint name="@(name)_joint" type="fixed">
+    <parent link="world" />
+    <child link="@(name)_frame" />
+    <origin xyz="@(' '.join([pose.xyz[0], pose.xyz[1], str(bin_height)]))" rpy="@(' '.join(pose.rpy))" />
+  </joint>
+@[end for]@
+  <!-- agv load point frames -->
+  <link name="agv1_load_point_frame" />
+  <joint name="agv1_load_point_joint" type="fixed">
+    <parent link="world" />
+    <child link="agv1_load_point_frame" />
+    <origin xyz="0.3 3.3 0.75" rpy="0 0 3.1415" />
+  </joint>
+  <link name="agv2_load_point_frame" />
+  <joint name="agv2_load_point_joint" type="fixed">
+    <parent link="world" />
+    <child link="agv2_load_point_frame" />
+    <origin xyz="0.3 -3.3 0.75" rpy="0 0 0" />
+  </joint>
+  <link name="belt_frame" />
+  <joint name="belt_joint" type="fixed">
+    <parent link="world" />
+    <child link="belt_frame" />
+    <origin xyz="1.24 0.15 0.91" rpy="0 0 0" />
+  </joint>
+
+
+  <!-- plugin to spawn gazebo scene data into the moveit scene -->
+  <!--
+  <gazebo>
+    <plugin filename="libgazebo_ros_moveit_planning_scene.so" name="gazebo_ros_moveit_planning_scene">
+      <topicName>/planning_scene</topicName>
+      <sceneName>workcell</sceneName>
+      <robotName>robot</robotName>
+      <updatePeriod>0.5</updatePeriod>
+    </plugin>
+  </gazebo>
+  -->
+
+</robot>

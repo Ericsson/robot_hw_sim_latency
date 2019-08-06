@@ -288,11 +288,11 @@ void RobotHWSimLatency::readSim(ros::Time time, ros::Duration period)
   for (unsigned int j = 0; j < n_dof_; j++) {
     // Gazebo has an interesting API...
     if (joint_types_[j] == urdf::Joint::PRISMATIC) {
-      current_joint_position_[j] = sim_joints_[j]->Position(0);
+      current_joint_position_[j] = sim_joints_[j]->Position();
       // ROS_WARN_STREAM_ONCE_NAMED("robot_hw_sim_latency", "PRISM");
     } else {
       current_joint_position_[j] +=
-          angles::shortest_angular_distance(current_joint_position_[j], sim_joints_[j]->Position(0));
+          angles::shortest_angular_distance(current_joint_position_[j], sim_joints_[j]->Position());
     }
     current_joint_velocity_[j] = sim_joints_[j]->GetVelocity(0);
     //("robot_hw_sim_latency","joint "<< joint_names_[j] << " cvel: "<<current_joint_velocity_[j]<< " cpos:

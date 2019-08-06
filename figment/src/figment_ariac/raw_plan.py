@@ -46,7 +46,7 @@ def main():
 
     # waiting order arrives
     while comp_class.current_comp_state is None:
-        rospy.loginfo("\n\nNo orders yet. Sleeping while orders arrive")
+        rospy.loginfo("\n\nNo orders yet. Sleeping while orders arribe")
         rospy.sleep(1.0)
 
     comp_class.go_to_initial_position()

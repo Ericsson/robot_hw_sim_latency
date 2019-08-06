@@ -1,0 +1,28 @@
+arm:
+  type: ur10
+sensors:
+  break_beam_1:
+    type: break_beam
+    pose:
+      xyz: [1.6, 2.25, 0.91]
+      rpy: [0, 0, 'pi']
+  proximity_sensor_1:
+    type: proximity_sensor
+    pose:
+      xyz: [0.9, 2.6, 0.914]
+      rpy: [0, 0, 0]
+  logical_camera_1:
+    type: logical_camera
+    pose:
+      xyz: [-0.66, 0.22, 1.36]
+      rpy: ['pi/2', 1.32, 0]
+  logical_camera_2:
+    type: logical_camera
+    pose:
+      xyz: [0.3, 3.15, 1.5]
+      rpy: [0, 'pi/2', 0]
+  laser_profiler_1:
+    type: laser_profiler
+    pose:
+      xyz: [1.21, 4, 1.64]
+      rpy: ['-pi', 'pi/2', 'pi/2']

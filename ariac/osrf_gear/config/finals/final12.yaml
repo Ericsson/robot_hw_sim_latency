@@ -1,0 +1,76 @@
+# In this scenario:
+# - There are two orders of one tray each:
+#   - The second will interrupt the first at a time that is inconvenient for the second order.
+#   - After the second order is complete, the first order is to be resumed.
+# - All parts come from the belt.
+# - There are no faulty parts.
+# - There's no need to flip any part.
+
+options:
+  insert_models_over_bins: true
+  fill_demo_tray: false
+  gazebo_state_logging: true
+  belt_population_cycles: 4
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    parts:
+      part_0:
+        type: piston_rod_part
+        pose:
+          xyz: [0.14, -0.14, 0]
+          rpy: [0, 0, 'pi/2']
+      part_1:
+        type: gear_part
+        pose:
+          xyz: [0.09, 0.16, 0]
+          rpy: [0, 0, 0]
+      part_2:
+        type: gear_part
+        pose:
+          xyz: [-0.09, 0.16, 0]
+          rpy: [0, 0, 0]
+  order_1:
+    announcement_condition: unwanted_parts
+    announcement_condition_value: 2
+    kit_count: 1
+    parts:
+      part_0:
+        type: gear_part
+        pose:
+          xyz: [0.0, 0.16, 0]
+          rpy: [0, 0, 0]
+      part_1:
+        type: disk_part
+        pose:
+          xyz: [0.12, -0.2, 0]
+          rpy: [0, 0, 0.5]
+
+belt_parts:
+  piston_rod_part:
+    5:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 0]
+
+  gasket_part:
+    10:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 0]
+
+  gear_part:
+    15:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 0]
+
+  disk_part:
+    20:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 0]
+
+time_limit: 500

@@ -1,0 +1,10 @@
+<launch>
+  <!-- use a version of qual2a.yaml that has been modified to fill AGV1 on comp start -->
+  <node name="ariac_sim" pkg="osrf_gear" type="gear.py"
+        args="-f
+              $(find test_ariac)/test/qual2a_testing.yaml
+              $(find ariac_example)/config/sample_gear_conf.yaml
+              --verbose --no-gui"/>
+  <test pkg="test_ariac" type="test_example_node.py" test-name="ariac_qual2a"
+        time-limit="60.0"/>
+</launch>

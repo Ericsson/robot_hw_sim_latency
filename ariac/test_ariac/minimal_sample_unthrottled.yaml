@@ -1,0 +1,50 @@
+# Competition configuration options
+
+options:
+  unthrottled_physics_update: true
+  insert_models_over_bins: true
+  insert_agvs: false
+  fill_demo_tray: false
+
+belt_parts:
+  piston_rod_part:
+    3.0:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 'pi/2']
+  part4:
+    6.0:
+      pose:
+        xyz: [0.0, 0.0, 0.1]
+        rpy: [0, 0, 'pi/2']
+
+orders:
+  order_0:
+    announcement_condition: time
+    announcement_condition_value: 0.0
+    parts:
+      part_0:
+        type: piston_rod_part
+        pose:
+          xyz: [0.1, 0, 0]
+          rpy: [0, 0, 0]
+      part_1:
+        type: piston_rod_part
+        pose:
+          xyz: [-0.1, 0, 0]
+          rpy: [0, 0, 'pi']
+
+models_over_bins:
+  bin7:
+    models:
+      piston_rod_part:
+        xyz_start: [0.1, 0.5, 0.0]
+        xyz_end: [0.1, 0.5, 0.0]
+        rpy: [0, 0, 'pi/4']
+        num_models_x: 1
+        num_models_y: 1
+
+time_limit: -1
+
+arm:
+  type: ur10
