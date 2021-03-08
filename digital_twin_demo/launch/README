@@ -8,10 +8,3 @@ cd ariac2017_latency/
 source install/setup.bash
 5.
 roslaunch digital_twin_demo setup.launch robot_ip:=172.31.32.232
-6.
-Open 127.0.0.1/demo.html
-
-
-IF IT DOESNT START
-sudo tc qdisc del dev enp5s0 root
-

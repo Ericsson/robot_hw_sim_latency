@@ -1,7 +1,7 @@
 arm:
   #type: effort_controllers/JointTrajectoryController
-  #type: velocity_controllers/JointTrajectoryController
-  type: pos_vel_controllers/JointTrajectoryController
+  type: velocity_controllers/JointTrajectoryController
+  #type: pos_vel_controllers/JointTrajectoryController
   joints:
      - linear_arm_actuator_joint
      - shoulder_pan_joint

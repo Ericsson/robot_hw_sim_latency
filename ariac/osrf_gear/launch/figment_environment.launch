@@ -1,6 +1,9 @@
 <launch>
   <arg name="competition" default="finals/final01.yaml" />
   <arg name="competition_full" default="$(find osrf_gear)/config/$(arg competition)" />
+  <arg name="digital_twin" default="true" />
+  <arg if="$(arg digital_twin)" name="no_digital_twin" value="" />
+  <arg unless="$(arg digital_twin)" name="no_digital_twin" value="--no-digital-twin" />
   <node name="ariac_sim" pkg="osrf_gear" type="gear.py" required="false"
-        args="-f '$(arg competition_full)' $(find figment_ariac)/config/figment_gear_conf.yaml" output="screen"/><!--  -v verbose -->
+        args="$(arg no_digital_twin) -f '$(arg competition_full)' $(find figment_ariac)/config/figment_gear_conf.yaml --no-gui " output="screen"/><!--  -v verbose -->
 </launch>

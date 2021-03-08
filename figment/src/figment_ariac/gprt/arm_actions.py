@@ -472,30 +472,33 @@ def go_down_until_get_piece(world_position, world_orientation, part_type,
 
     rospy.loginfo(
         "[go_down_until_get_piece] goDownUntilGetPiece pos = " + str(position))
+    try:
+        if solver_type == SolverType.BIN:
+            angles = solverBin(
+                position, tfOri, part_type, ignore_height)
+            angles[4]+=0.05
+            angles[5]+=0.03
+            angles2 = solverBin(
+                position2, tfOri, part_type, ignore_height)
+            angles2[4]+=0.05
 
-    if solver_type == SolverType.BIN:
-        angles = solverBin(
-            position, tfOri, part_type, ignore_height)
-        angles[4]+=0.05
-        angles[5]+=0.03
-        angles2 = solverBin(
-            position2, tfOri, part_type, ignore_height)
-        angles2[4]+=0.05
-
-
-    elif solver_type == SolverType.AGV1:  
-        rospy.loginfo(
-        "[go_down_until_get_piece] SolverType.AGV1" )
-        angles = depositOnTray1(
-            position, tfOri, part_type, ignore_height=ignore_height, adjust=adjust)
-        angles2= depositOnTray1(
-            position2, tfOri, part_type, ignore_height=ignore_height, adjust=adjust) 
-    elif solver_type == SolverType.AGV2:
-        angles = depositOnTray2(
-            position, tfOri, part_type, ignore_height=ignore_height)
-        angles2 = depositOnTray2(
-            position2, tfOri, part_type, ignore_height=ignore_height)        
-
+        
+        elif solver_type == SolverType.AGV1:  
+            rospy.loginfo(
+            "[go_down_until_get_piece] SolverType.AGV1" )
+            angles = depositOnTray1(
+                position, tfOri, part_type, ignore_height=ignore_height, adjust=adjust)
+            angles2= depositOnTray1(
+                position2, tfOri, part_type, ignore_height=ignore_height, adjust=adjust) 
+        elif solver_type == SolverType.AGV2:
+            angles = depositOnTray2(
+                position, tfOri, part_type, ignore_height=ignore_height)
+            angles2 = depositOnTray2(
+                position2, tfOri, part_type, ignore_height=ignore_height)        
+    except AssertionError:
+        rospy.logerr(
+        "[go_down_until_get_piece] Maths Failure, couldn't find triangle")
+        return False
 
 
 

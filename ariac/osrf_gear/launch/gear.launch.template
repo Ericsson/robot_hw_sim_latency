@@ -8,6 +8,7 @@
 
   <remap from="joint_states" to="ariac/joint_states" />
 
+  <arg name="digital_twin" default="true"/>
   <arg name="limited" default="false"/>
   <arg name="gui" default="true"/>
   <arg name="debug" default="false"/>
@@ -15,6 +16,7 @@
   <arg name="world_path" />
   <arg name="gear_urdf_xacro" />
   <arg name="state_log_dir" value="$(env HOME)/.ariac/log/gazebo" />
+  
 
   <!-- run startup script -->
   <node name="startup_ariac" pkg="osrf_gear" type="startup.sh" output="screen" />
@@ -23,10 +25,16 @@
   <arg     if="$(arg competition_mode)" name="enable_gz_ros_network" value="false"/>
 
   <!-- set latency plugin -->
-  <!--<rosparam param="/robot_hw_sim_latency/latency_plugin">latency_plugin_simple_queue/SimpleQueueLatencyPlugin</rosparam>-->
-  <!--<rosparam param="/latency_plugin_simple_queue/queue_length">3</rosparam>-->
+
+  <rosparam unless="$(arg digital_twin)" param="/robot_hw_sim_latency/latency_plugin">latency_plugin_simple_queue/SimpleQueueLatencyPlugin</rosparam>
+  <rosparam unless="$(arg digital_twin)" param="/latency_plugin_simple_queue/queue_length">15</rosparam>
+
   <!--<rosparam param="/robot_hw_sim_latency/latency_plugin">latency_plugin_velocity_publisher/VelocityPublisherPlugin</rosparam>-->
-  <rosparam param="/robot_hw_sim_latency/latency_plugin">latency_plugin_velocity_control/VelocityControlPlugin</rosparam>
+  <rosparam if="$(arg digital_twin)" param="/robot_hw_sim_latency/latency_plugin">latency_plugin_velocity_control/VelocityControlPlugin</rosparam>
+<!--
+  <rosparam param="/robot_hw_sim_latency/latency_plugin">robot_hw_sim_latency/DefaultSimLatencyPlugin</rosparam>
+-->
+
   
   <rosparam file="$(find osrf_gear)/launch/gazebo_config.yaml" command="load"/>
 
@@ -46,14 +54,16 @@
 
   <!-- load the URDF (it will include the robot arm model) -->
   <!--<param name="robot_description"
-         command="$(find xacro)/xacro.py '$(arg gear_urdf_xacro)' use_effort_interface:=true" />-->
-<!--
-       <param name="robot_description"
+         command="$(find xacro)/xacro.py '$(arg gear_urdf_xacro)' use_effort_interface:=true" />
+  -->
+         
+       <param unless="$(arg digital_twin)" name="robot_description"
          command="$(find xacro)/xacro.py '$(arg gear_urdf_xacro)' use_velocity_interface:=true" />
--->
 
-       <param name="robot_description"
-         command="$(find xacro)/xacro.py '$(arg gear_urdf_xacro)' use_pos_vel_interface:=true" />
+
+       <param if="$(arg digital_twin)" name="robot_description"
+         command="$(find xacro)/xacro.py '$(arg gear_urdf_xacro)' use_pos_vel_interface:=true"/>
+
 
 
 @[if arm]@
@@ -69,6 +79,8 @@ initial_joint_states_string = \
     <arg name="extra_spawn_model_args" value="@(initial_joint_states_string)" />
     <arg name="set_robot_description" value="false" />
   </include>
+  <param if="$(arg digital_twin)" name="/ariac/arm/type" type="str" value="pos_vel_controllers/JointTrajectoryController" />
+  
 @[end if]@
 @[end if]@
 

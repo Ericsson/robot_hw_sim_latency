@@ -86,6 +86,8 @@ global_model_count = {}  # the global count of how many times a model type has b
 
 def prepare_arguments(parser):
     add = parser.add_argument
+    add('--no-digital-twin', action='store_true', default=False,
+        help='NO Digital twin')
     add('-n', '--dry-run', action='store_true', default=False,
         help='print generated files to stdout, but do not write them to disk')
     add('-v', '--verbose', action='store_true', default=False,
@@ -518,6 +520,8 @@ def main(sysargv=None):
         cmd += ['verbose:=true']
     if args.no_gui:
         cmd += ['gui:=false']
+    if args.no_digital_twin:
+        cmd += ['digital_twin:=false']
 
     if not args.development_mode:
         os.environ['ARIAC_COMPETITION'] = '1'

@@ -175,8 +175,8 @@ def isclose(a, b, rel_tol=1e-09, abs_tol=0.0):
 def iscloseError(a, b, error):
     #Fixed. Otherwise it would consider as close x1 = -3.0 and x2 = 3.0 for instance
     #return abs(a - b) <= 0.015
-    return abs(a - b) <= error
-    #return abs(angles.shortest_angular_distance(a,b)) <= error
+    #return abs(a - b) <= error
+    return abs(angles.shortest_angular_distance(a,b)) <= error
 
 def checkPartOnTray(vet1, vet2, op):
     diff0 = abs(vet1[0]) - abs(vet2[0])
